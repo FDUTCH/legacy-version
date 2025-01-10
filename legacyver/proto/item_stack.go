@@ -112,10 +112,59 @@ func (x *ItemStackRequest) ToLatest() protocol.ItemStackRequest {
 		FilterCause:   x.FilterCause,
 	}
 	for i, v := range x.Actions {
-		if z, ok := v.(interface {
-			ToLatest() protocol.StackRequestAction
-		}); ok {
+		if z, ok := v.(*TakeStackRequestAction); ok {
 			ret.Actions[i] = z.ToLatest()
+			continue
+		}
+
+		if z, ok := v.(*PlaceStackRequestAction); ok {
+			ret.Actions[i] = z.ToLatest()
+			continue
+		}
+
+		if z, ok := v.(*SwapStackRequestAction); ok {
+			ret.Actions[i] = z.ToLatest()
+			continue
+		}
+
+		if z, ok := v.(*DropStackRequestAction); ok {
+			ret.Actions[i] = z.ToLatest()
+			continue
+		}
+
+		if z, ok := v.(*DestroyStackRequestAction); ok {
+			ret.Actions[i] = z.ToLatest()
+			continue
+		}
+
+		if z, ok := v.(*ConsumeStackRequestAction); ok {
+			ret.Actions[i] = z.ToLatest()
+			continue
+		}
+
+		if z, ok := v.(*CraftRecipeStackRequestAction); ok {
+			ret.Actions[i] = z.ToLatest()
+			continue
+		}
+
+		if z, ok := v.(*AutoCraftRecipeStackRequestAction); ok {
+			ret.Actions[i] = z.ToLatest()
+			continue
+		}
+
+		if z, ok := v.(*CraftCreativeStackRequestAction); ok {
+			ret.Actions[i] = z.ToLatest()
+			continue
+		}
+
+		if z, ok := v.(*CraftGrindstoneRecipeStackRequestAction); ok {
+			ret.Actions[i] = z.ToLatest()
+			continue
+		}
+
+		if z, ok := v.(*CraftLoomRecipeStackRequestAction); ok {
+			ret.Actions[i] = z.ToLatest()
+			continue
 		}
 
 		ret.Actions[i] = v
