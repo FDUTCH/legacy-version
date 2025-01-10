@@ -42,6 +42,36 @@ func (x *ItemStackRequest) FromLatest(y protocol.ItemStackRequest) ItemStackRequ
 	x.RequestID = y.RequestID
 	x.Actions = make([]protocol.StackRequestAction, len(y.Actions))
 	for i, v := range y.Actions {
+		if z, ok := v.(*protocol.TakeStackRequestAction); ok {
+			x.Actions[i] = (&TakeStackRequestAction{}).FromLatest(z)
+			continue
+		}
+
+		if z, ok := v.(*protocol.PlaceStackRequestAction); ok {
+			x.Actions[i] = (&PlaceStackRequestAction{}).FromLatest(z)
+			continue
+		}
+
+		if z, ok := v.(*protocol.SwapStackRequestAction); ok {
+			x.Actions[i] = (&SwapStackRequestAction{}).FromLatest(z)
+			continue
+		}
+
+		if z, ok := v.(*protocol.DropStackRequestAction); ok {
+			x.Actions[i] = (&DropStackRequestAction{}).FromLatest(z)
+			continue
+		}
+
+		if z, ok := v.(*protocol.DestroyStackRequestAction); ok {
+			x.Actions[i] = (&DestroyStackRequestAction{}).FromLatest(z)
+			continue
+		}
+
+		if z, ok := v.(*protocol.ConsumeStackRequestAction); ok {
+			x.Actions[i] = (&ConsumeStackRequestAction{}).FromLatest(z)
+			continue
+		}
+
 		if z, ok := v.(*protocol.CraftRecipeStackRequestAction); ok {
 			x.Actions[i] = (&CraftRecipeStackRequestAction{}).FromLatest(z)
 			continue
@@ -82,29 +112,10 @@ func (x *ItemStackRequest) ToLatest() protocol.ItemStackRequest {
 		FilterCause:   x.FilterCause,
 	}
 	for i, v := range x.Actions {
-		if z, ok := v.(*CraftRecipeStackRequestAction); ok {
+		if z, ok := v.(interface {
+			ToLatest() protocol.StackRequestAction
+		}); ok {
 			ret.Actions[i] = z.ToLatest()
-			continue
-		}
-
-		if z, ok := v.(*AutoCraftRecipeStackRequestAction); ok {
-			ret.Actions[i] = z.ToLatest()
-			continue
-		}
-
-		if z, ok := v.(*CraftCreativeStackRequestAction); ok {
-			ret.Actions[i] = z.ToLatest()
-			continue
-		}
-
-		if z, ok := v.(*CraftGrindstoneRecipeStackRequestAction); ok {
-			ret.Actions[i] = z.ToLatest()
-			continue
-		}
-
-		if z, ok := v.(*CraftLoomRecipeStackRequestAction); ok {
-			ret.Actions[i] = z.ToLatest()
-			continue
 		}
 
 		ret.Actions[i] = v
@@ -125,17 +136,17 @@ func (x *ItemStackRequest) Marshal(r protocol.IO) {
 // lookupStackRequestActionType looks up the ID of a StackRequestAction.
 func lookupStackRequestActionType(x StackRequestAction, id *uint8) bool {
 	switch x.(type) {
-	case *protocol.TakeStackRequestAction:
+	case *TakeStackRequestAction:
 		*id = protocol.StackRequestActionTake
-	case *protocol.PlaceStackRequestAction:
+	case *PlaceStackRequestAction:
 		*id = protocol.StackRequestActionPlace
-	case *protocol.SwapStackRequestAction:
+	case *SwapStackRequestAction:
 		*id = protocol.StackRequestActionSwap
-	case *protocol.DropStackRequestAction:
+	case *DropStackRequestAction:
 		*id = protocol.StackRequestActionDrop
-	case *protocol.DestroyStackRequestAction:
+	case *DestroyStackRequestAction:
 		*id = protocol.StackRequestActionDestroy
-	case *protocol.ConsumeStackRequestAction:
+	case *ConsumeStackRequestAction:
 		*id = protocol.StackRequestActionConsume
 	case *protocol.CreateStackRequestAction:
 		*id = protocol.StackRequestActionCreate
@@ -171,17 +182,17 @@ func lookupStackRequestActionType(x StackRequestAction, id *uint8) bool {
 func lookupStackRequestAction(id uint8, x *protocol.StackRequestAction) bool {
 	switch id {
 	case protocol.StackRequestActionTake:
-		*x = &protocol.TakeStackRequestAction{}
+		*x = &TakeStackRequestAction{}
 	case protocol.StackRequestActionPlace:
-		*x = &protocol.PlaceStackRequestAction{}
+		*x = &PlaceStackRequestAction{}
 	case protocol.StackRequestActionSwap:
-		*x = &protocol.SwapStackRequestAction{}
+		*x = &SwapStackRequestAction{}
 	case protocol.StackRequestActionDrop:
-		*x = &protocol.DropStackRequestAction{}
+		*x = &DropStackRequestAction{}
 	case protocol.StackRequestActionDestroy:
-		*x = &protocol.DestroyStackRequestAction{}
+		*x = &DestroyStackRequestAction{}
 	case protocol.StackRequestActionConsume:
-		*x = &protocol.ConsumeStackRequestAction{}
+		*x = &ConsumeStackRequestAction{}
 	case protocol.StackRequestActionCreate:
 		*x = &protocol.CreateStackRequestAction{}
 	case protocol.StackRequestActionPlaceInContainer:
@@ -468,11 +479,45 @@ type TakeStackRequestAction struct {
 	transferStackRequestAction
 }
 
+// ToLatest ...
+func (a *TakeStackRequestAction) ToLatest() *protocol.TakeStackRequestAction {
+	ret := &protocol.TakeStackRequestAction{}
+	ret.Count = a.Count
+	ret.Source = a.Source.ToLatest()
+	ret.Destination = a.Destination.ToLatest()
+	return ret
+}
+
+// FromLatest ...
+func (a *TakeStackRequestAction) FromLatest(v *protocol.TakeStackRequestAction) *TakeStackRequestAction {
+	a.Count = v.Count
+	a.Source = (&StackRequestSlotInfo{}).FromLatest(v.Source)
+	a.Destination = (&StackRequestSlotInfo{}).FromLatest(v.Destination)
+	return a
+}
+
 // PlaceStackRequestAction is sent by the client to the server to place x amount of items from one slot into
 // another slot, such as when shift clicking an item in the inventory to move it around or when moving an item
 // in the cursor into a slot.
 type PlaceStackRequestAction struct {
 	transferStackRequestAction
+}
+
+// ToLatest ...
+func (a *PlaceStackRequestAction) ToLatest() *protocol.PlaceStackRequestAction {
+	ret := &protocol.PlaceStackRequestAction{}
+	ret.Count = a.Count
+	ret.Source = a.Source.ToLatest()
+	ret.Destination = a.Destination.ToLatest()
+	return ret
+}
+
+// FromLatest ...
+func (a *PlaceStackRequestAction) FromLatest(v *protocol.PlaceStackRequestAction) *PlaceStackRequestAction {
+	a.Count = v.Count
+	a.Source = (&StackRequestSlotInfo{}).FromLatest(v.Source)
+	a.Destination = (&StackRequestSlotInfo{}).FromLatest(v.Destination)
+	return a
 }
 
 // SwapStackRequestAction is sent by the client to swap the item in its cursor with an item present in another
@@ -481,6 +526,21 @@ type SwapStackRequestAction struct {
 	// Source and Destination point to the source slot from which Count of the item stack were taken and the
 	// destination slot to which this item was moved.
 	Source, Destination StackRequestSlotInfo
+}
+
+// ToLatest ...
+func (a *SwapStackRequestAction) ToLatest() *protocol.SwapStackRequestAction {
+	ret := &protocol.SwapStackRequestAction{}
+	ret.Source = a.Source.ToLatest()
+	ret.Destination = a.Destination.ToLatest()
+	return ret
+}
+
+// FromLatest ...
+func (a *SwapStackRequestAction) FromLatest(v *protocol.SwapStackRequestAction) *SwapStackRequestAction {
+	a.Source = (&StackRequestSlotInfo{}).FromLatest(v.Source)
+	a.Destination = (&StackRequestSlotInfo{}).FromLatest(v.Destination)
+	return a
 }
 
 // Marshal ...
@@ -503,6 +563,23 @@ type DropStackRequestAction struct {
 	Randomly bool
 }
 
+// ToLatest ...
+func (a *DropStackRequestAction) ToLatest() *protocol.DropStackRequestAction {
+	ret := &protocol.DropStackRequestAction{}
+	ret.Count = a.Count
+	ret.Source = a.Source.ToLatest()
+	ret.Randomly = a.Randomly
+	return ret
+}
+
+// FromLatest ...
+func (a *DropStackRequestAction) FromLatest(v *protocol.DropStackRequestAction) *DropStackRequestAction {
+	a.Count = v.Count
+	a.Source = (&StackRequestSlotInfo{}).FromLatest(v.Source)
+	a.Randomly = v.Randomly
+	return a
+}
+
 // Marshal ...
 func (a *DropStackRequestAction) Marshal(r protocol.IO) {
 	r.Uint8(&a.Count)
@@ -520,6 +597,21 @@ type DestroyStackRequestAction struct {
 	Source StackRequestSlotInfo
 }
 
+// ToLatest ...
+func (a *DestroyStackRequestAction) ToLatest() *protocol.DestroyStackRequestAction {
+	ret := &protocol.DestroyStackRequestAction{}
+	ret.Count = a.Count
+	ret.Source = a.Source.ToLatest()
+	return ret
+}
+
+// FromLatest ...
+func (a *DestroyStackRequestAction) FromLatest(v *protocol.DestroyStackRequestAction) *DestroyStackRequestAction {
+	a.Count = v.Count
+	a.Source = (&StackRequestSlotInfo{}).FromLatest(v.Source)
+	return a
+}
+
 // Marshal ...
 func (a *DestroyStackRequestAction) Marshal(r protocol.IO) {
 	r.Uint8(&a.Count)
@@ -530,6 +622,21 @@ func (a *DestroyStackRequestAction) Marshal(r protocol.IO) {
 // item is 'consumed'.
 type ConsumeStackRequestAction struct {
 	DestroyStackRequestAction
+}
+
+// ToLatest ...
+func (a *ConsumeStackRequestAction) ToLatest() *protocol.ConsumeStackRequestAction {
+	ret := &protocol.ConsumeStackRequestAction{}
+	ret.DestroyStackRequestAction.Source = a.Source.ToLatest()
+	ret.DestroyStackRequestAction.Count = a.Count
+	return ret
+}
+
+// FromLatest ...
+func (a *ConsumeStackRequestAction) FromLatest(v *protocol.ConsumeStackRequestAction) *ConsumeStackRequestAction {
+	a.Source = (&StackRequestSlotInfo{}).FromLatest(v.DestroyStackRequestAction.Source)
+	a.Count = v.DestroyStackRequestAction.Count
+	return a
 }
 
 // CreateStackRequestAction is sent by the client when an item is created through being used as part of a
@@ -554,9 +661,43 @@ type PlaceInContainerStackRequestAction struct {
 	transferStackRequestAction
 }
 
+// ToLatest ...
+func (a *PlaceInContainerStackRequestAction) ToLatest() *protocol.PlaceInContainerStackRequestAction {
+	ret := &protocol.PlaceInContainerStackRequestAction{}
+	ret.Count = a.Count
+	ret.Source = a.Source.ToLatest()
+	ret.Destination = a.Destination.ToLatest()
+	return ret
+}
+
+// FromLatest ...
+func (a *PlaceInContainerStackRequestAction) FromLatest(y *protocol.PlaceInContainerStackRequestAction) *PlaceInContainerStackRequestAction {
+	a.Count = y.Count
+	a.Source = (&StackRequestSlotInfo{}).FromLatest(y.Source)
+	a.Destination = (&StackRequestSlotInfo{}).FromLatest(y.Destination)
+	return a
+}
+
 // TakeOutContainerStackRequestAction currently has no known purpose.
 type TakeOutContainerStackRequestAction struct {
 	transferStackRequestAction
+}
+
+// ToLatest ...
+func (a *TakeOutContainerStackRequestAction) ToLatest() *protocol.TakeOutContainerStackRequestAction {
+	ret := &protocol.TakeOutContainerStackRequestAction{}
+	ret.Count = a.Count
+	ret.Source = a.Source.ToLatest()
+	ret.Destination = a.Destination.ToLatest()
+	return ret
+}
+
+// FromLatest ...
+func (a *TakeOutContainerStackRequestAction) FromLatest(y *protocol.TakeOutContainerStackRequestAction) *TakeOutContainerStackRequestAction {
+	a.Count = y.Count
+	a.Source = (&StackRequestSlotInfo{}).FromLatest(y.Source)
+	a.Destination = (&StackRequestSlotInfo{}).FromLatest(y.Destination)
+	return a
 }
 
 // LabTableCombineStackRequestAction is sent by the client when it uses a lab table to combine item stacks.
@@ -833,6 +974,23 @@ type StackRequestSlotInfo struct {
 	// must check if these IDs match. If they do not match, servers should reject the stack request that the
 	// action holding this info was in.
 	StackNetworkID int32
+}
+
+// ToLatest ...
+func (x *StackRequestSlotInfo) ToLatest() protocol.StackRequestSlotInfo {
+	return protocol.StackRequestSlotInfo{
+		Container:      x.Container.ToLatest(),
+		Slot:           x.Slot,
+		StackNetworkID: x.StackNetworkID,
+	}
+}
+
+// FromLatest ...
+func (x *StackRequestSlotInfo) FromLatest(y protocol.StackRequestSlotInfo) StackRequestSlotInfo {
+	x.Container = (&FullContainerName{}).FromLatest(y.Container)
+	x.Slot = y.Slot
+	x.StackNetworkID = y.StackNetworkID
+	return *x
 }
 
 // StackReqSlotInfo reads/writes a StackRequestSlotInfo x using IO r.
