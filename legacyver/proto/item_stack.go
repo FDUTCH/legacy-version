@@ -66,6 +66,8 @@ func (x *ItemStackRequest) FromLatest(y protocol.ItemStackRequest) ItemStackRequ
 			x.Actions[i] = (&CraftLoomRecipeStackRequestAction{}).FromLatest(z)
 			continue
 		}
+
+		x.Actions[i] = v
 	}
 	x.FilterStrings = y.FilterStrings
 	x.FilterCause = y.FilterCause
@@ -104,6 +106,8 @@ func (x *ItemStackRequest) ToLatest() protocol.ItemStackRequest {
 			ret.Actions[i] = z.ToLatest()
 			continue
 		}
+
+		ret.Actions[i] = v
 	}
 	return ret
 }
