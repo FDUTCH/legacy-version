@@ -46,7 +46,7 @@ type PlayerAuthInput struct {
 	// ItemInteractionData is the transaction data if the InputData includes an item interaction.
 	ItemInteractionData protocol.UseItemTransactionData
 	// ItemStackRequest is sent by the client to change an item in their inventory.
-	ItemStackRequest protocol.ItemStackRequest
+	ItemStackRequest proto.ItemStackRequest
 	// BlockActions is a slice of block actions that the client has interacted with.
 	BlockActions []protocol.PlayerBlockAction
 	// VehicleRotation is the rotation of the vehicle that the player is in, if any.
