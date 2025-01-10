@@ -837,7 +837,13 @@ type StackRequestSlotInfo struct {
 
 // StackReqSlotInfo reads/writes a StackRequestSlotInfo x using IO r.
 func StackReqSlotInfo(r protocol.IO, x *StackRequestSlotInfo) {
-	protocol.Single(r, &x.Container)
+	if IsProtoGTE(r, ID712) {
+		protocol.Single(r, &x.Container)
+	} else {
+		containerID := x.Container.ContainerID
+		r.Uint8(&containerID)
+		x.Container.ContainerID = containerID
+	}
 	r.Uint8(&x.Slot)
 	r.Varint32(&x.StackNetworkID)
 }
