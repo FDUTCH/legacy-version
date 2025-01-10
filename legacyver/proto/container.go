@@ -28,7 +28,7 @@ func (x *FullContainerName) Marshal(r protocol.IO) {
 	r.Uint8(&x.ContainerID)
 	if IsProtoGTE(r, ID729) {
 		protocol.OptionalFunc(r, &x.DynamicContainerID, r.Uint32)
-	} else {
+	} else if IsProtoGTE(r, 712) {
 		dynamicContainerID, _ := x.DynamicContainerID.Value()
 		r.Uint32(&dynamicContainerID)
 		if dynamicContainerID != 0 {

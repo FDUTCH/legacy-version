@@ -1044,13 +1044,7 @@ func (x *StackRequestSlotInfo) FromLatest(y protocol.StackRequestSlotInfo) Stack
 
 // StackReqSlotInfo reads/writes a StackRequestSlotInfo x using IO r.
 func StackReqSlotInfo(r protocol.IO, x *StackRequestSlotInfo) {
-	if IsProtoGTE(r, ID712) {
-		protocol.Single(r, &x.Container)
-	} else {
-		containerID := x.Container.ContainerID
-		r.Uint8(&containerID)
-		x.Container.ContainerID = containerID
-	}
+	protocol.Single(r, &x.Container)
 	r.Uint8(&x.Slot)
 	r.Varint32(&x.StackNetworkID)
 }
