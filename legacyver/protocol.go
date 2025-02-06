@@ -20,6 +20,10 @@ func init() {
 	for pkId, cur := range packetPoolClient {
 		packetPoolClient[pkId] = convertPacketFunc(pkId, cur)
 	}
+
+	for pkId, cur := range packetPoolServer {
+		packetPoolServer[pkId] = convertPacketFunc(pkId, cur)
+	}
 }
 
 func convertPacketFunc(pid uint32, cur func() packet.Packet) func() packet.Packet {
