@@ -12,6 +12,7 @@ type Item interface {
 	// ItemNameToRuntimeID converts a string ID to an item runtime ID.
 	ItemNameToRuntimeID(string) (int32, bool)
 	RegisterEntry(string) int32
+	RegisterEntryRID(string, int32)
 	Air() int32
 	ItemVersion() uint16
 }
@@ -94,6 +95,15 @@ func (m *DefaultItemMapping) RegisterEntry(name string) int32 {
 	m.itemNamesToRuntimeIDs[name] = nextRID
 	m.itemRuntimeIDsToNames[nextRID] = name
 	return nextRID
+}
+
+func (m *DefaultItemMapping) RegisterEntryRID(name string, rid int32) {
+	defer m.mu.Unlock()
+	m.mu.Lock()
+	if _, ok := m.itemNamesToRuntimeIDs[name]; !ok {
+		m.itemNamesToRuntimeIDs[name] = rid
+		m.itemRuntimeIDsToNames[rid] = name
+	}
 }
 
 func (m *DefaultItemMapping) Air() int32 {

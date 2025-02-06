@@ -498,7 +498,7 @@ func (t *DefaultItemTranslator) DowngradeItemPackets(pks []packet.Packet, _ *min
 						panic(itemType)
 					}
 				} else {
-					t.latest.RegisterEntry(entry.Name)
+					t.latest.RegisterEntryRID(entry.Name, int32(entry.RuntimeID))
 					entry.RuntimeID = int16(t.mapping.RegisterEntry(entry.Name))
 				}
 				pk.Items[i] = entry
@@ -717,7 +717,7 @@ func (t *DefaultItemTranslator) UpgradeItemPackets(pks []packet.Packet, _ *minec
 						panic(itemType)
 					}
 				} else {
-					t.latest.RegisterEntry(entry.Name)
+					t.latest.RegisterEntryRID(entry.Name, int32(entry.RuntimeID))
 					entry.RuntimeID = int16(t.mapping.RegisterEntry(entry.Name))
 				}
 				pk.Items[i] = entry
