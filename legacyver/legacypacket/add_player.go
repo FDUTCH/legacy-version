@@ -53,7 +53,7 @@ type AddPlayer struct {
 	// attributes of the entity.
 	EntityProperties protocol.EntityProperties
 	// AbilityData represents various data about the abilities of a player, such as ability layers or permissions.
-	AbilityData protocol.AbilityData
+	AbilityData proto.AbilityData
 	// EntityLinks is a list of entity links that are currently active on the player. These links alter the
 	// way the player shows up when first spawned in terms of it shown as riding an entity. Setting these
 	// links is important for new viewers to see the player is riding another entity.
