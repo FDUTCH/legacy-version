@@ -3,8 +3,8 @@ package legacyver
 import (
 	"fmt"
 	"github.com/akmalfairuz/legacy-version/internal/item"
+	"github.com/akmalfairuz/legacy-version/legacyver/proto"
 	"github.com/akmalfairuz/legacy-version/mapping"
-	"github.com/akmalfairuz/legacy-version/packbuilder"
 	"github.com/df-mc/dragonfly/server/world"
 	"github.com/samber/lo"
 	"github.com/sandertv/gophertunnel/minecraft"
@@ -39,6 +39,10 @@ type ItemTranslator interface {
 	Register(item world.CustomItem, replacement string)
 	// CustomItems lists all custom items used as substitutes, with the runtime id as the key
 	CustomItems() map[int32]world.CustomItem
+	// DowngradeLegacyItemRegistry ...
+	DowngradeLegacyItemRegistry(entries []proto.LegacyItemRegistryEntry) []proto.LegacyItemRegistryEntry
+	// UpgradeLegacyItemRegistry ...
+	UpgradeLegacyItemRegistry(entries []proto.LegacyItemRegistryEntry) []proto.LegacyItemRegistryEntry
 }
 
 type DefaultItemTranslator struct {
@@ -480,49 +484,82 @@ func (t *DefaultItemTranslator) DowngradeItemPackets(pks []packet.Packet, _ *min
 				})
 				pk.EventData = (itemType.NetworkID << 16) | int32(itemType.MetadataValue)
 			}
-		case *packet.StartGame:
-			for i, entry := range pk.Items {
-				if !entry.ComponentBased {
-					itemType := t.DowngradeItemType(protocol.ItemType{
-						NetworkID:     int32(entry.RuntimeID),
-						MetadataValue: 0,
-					})
-					if itemType.NetworkID == t.mapping.Air() {
-						removeIndex(pk.Items, i)
-						continue
-					}
-					entry.RuntimeID = int16(itemType.NetworkID)
-
-					var ok bool
-					if entry.Name, ok = t.mapping.ItemRuntimeIDToName(itemType.NetworkID); !ok {
-						panic(itemType)
-					}
-				} else {
-					t.latest.RegisterEntryRID(entry.Name, int32(entry.RuntimeID))
-					entry.RuntimeID = int16(t.mapping.RegisterEntry(entry.Name))
-				}
-				pk.Items[i] = entry
-			}
-			for rid, i := range t.CustomItems() {
-				name, _ := i.EncodeItem()
-				pk.Items = append(pk.Items, protocol.ItemEntry{
-					Name:           name,
-					RuntimeID:      int16(rid),
-					ComponentBased: true,
-				})
-			}
-		case *packet.ItemComponent:
-			for _, i := range t.CustomItems() {
-				name, _ := i.EncodeItem()
-				pk.Items = append(pk.Items, protocol.ItemComponentEntry{
-					Name: name,
-					Data: packbuilder.Components(i),
-				})
-			}
+			//case *packet.ItemRegistry:
+			//	for _, i := range t.CustomItems() {
+			//		name, _ := i.EncodeItem()
+			//		pk.Items = append(pk.Items, protocol.ItemEntry{
+			//			Name: name,
+			//			Data: packbuilder.Components(i),
+			//		})
+			//	}
 		}
 		result = append(result, pk)
 	}
 	return result
+}
+
+func (t *DefaultItemTranslator) DowngradeLegacyItemRegistry(entries []proto.LegacyItemRegistryEntry) []proto.LegacyItemRegistryEntry {
+	for i, entry := range entries {
+		if !entry.ComponentBased {
+			itemType := t.DowngradeItemType(protocol.ItemType{
+				NetworkID:     int32(entry.RuntimeID),
+				MetadataValue: 0,
+			})
+			if itemType.NetworkID == t.mapping.Air() {
+				removeIndex(entries, i)
+				continue
+			}
+			entry.RuntimeID = int16(itemType.NetworkID)
+
+			var ok bool
+			if entry.Name, ok = t.mapping.ItemRuntimeIDToName(itemType.NetworkID); !ok {
+				panic(itemType)
+			}
+		} else {
+			t.latest.RegisterEntryRID(entry.Name, int32(entry.RuntimeID), 2)
+			entry.RuntimeID = int16(t.mapping.RegisterEntry(entry.Name))
+		}
+		entries[i] = entry
+	}
+	for rid, i := range t.CustomItems() {
+		name, _ := i.EncodeItem()
+		entries = append(entries, proto.LegacyItemRegistryEntry{
+			Name:           name,
+			RuntimeID:      int16(rid),
+			ComponentBased: true,
+		})
+	}
+	return entries
+}
+
+func (t *DefaultItemTranslator) UpgradeLegacyItemRegistry(entries []proto.LegacyItemRegistryEntry) []proto.LegacyItemRegistryEntry {
+	for i, entry := range entries {
+		if !entry.ComponentBased {
+			itemType := t.UpgradeItemType(protocol.ItemType{
+				NetworkID:     int32(entry.RuntimeID),
+				MetadataValue: 0,
+			})
+			entry.RuntimeID = int16(itemType.NetworkID)
+
+			var ok bool
+			if entry.Name, ok = t.latest.ItemRuntimeIDToName(itemType.NetworkID); !ok {
+				panic(itemType)
+			}
+		} else {
+			t.latest.RegisterEntryRID(entry.Name, int32(entry.RuntimeID), 2)
+			entry.RuntimeID = int16(t.mapping.RegisterEntry(entry.Name))
+		}
+		entries[i] = entry
+	}
+	for rid, i := range t.CustomItems() {
+		name, _ := i.EncodeItem()
+		entries = append(entries, proto.LegacyItemRegistryEntry{
+			Name:           name,
+			RuntimeID:      int16(rid),
+			ComponentBased: true,
+		})
+	}
+	return entries
 }
 
 func (t *DefaultItemTranslator) UpgradeItemPackets(pks []packet.Packet, _ *minecraft.Conn) (result []packet.Packet) {
@@ -703,41 +740,14 @@ func (t *DefaultItemTranslator) UpgradeItemPackets(pks []packet.Packet, _ *minec
 				})
 				pk.EventData = (itemType.NetworkID << 16) | int32(itemType.MetadataValue)
 			}
-		case *packet.StartGame:
-			for i, entry := range pk.Items {
-				if !entry.ComponentBased {
-					itemType := t.UpgradeItemType(protocol.ItemType{
-						NetworkID:     int32(entry.RuntimeID),
-						MetadataValue: 0,
-					})
-					entry.RuntimeID = int16(itemType.NetworkID)
-
-					var ok bool
-					if entry.Name, ok = t.latest.ItemRuntimeIDToName(itemType.NetworkID); !ok {
-						panic(itemType)
-					}
-				} else {
-					t.latest.RegisterEntryRID(entry.Name, int32(entry.RuntimeID))
-					entry.RuntimeID = int16(t.mapping.RegisterEntry(entry.Name))
-				}
-				pk.Items[i] = entry
-			}
-			for rid, i := range t.CustomItems() {
-				name, _ := i.EncodeItem()
-				pk.Items = append(pk.Items, protocol.ItemEntry{
-					Name:           name,
-					RuntimeID:      int16(rid),
-					ComponentBased: true,
-				})
-			}
-		case *packet.ItemComponent:
-			for _, i := range t.CustomItems() {
-				name, _ := i.EncodeItem()
-				pk.Items = append(pk.Items, protocol.ItemComponentEntry{
-					Name: name,
-					Data: packbuilder.Components(i),
-				})
-			}
+			//case *packet.ItemRegistry:
+			//	for _, i := range t.CustomItems() {
+			//		name, _ := i.EncodeItem()
+			//		pk.Items = append(pk.Items, protocol.ItemEntry{
+			//			Name: name,
+			//			Data: packbuilder.Components(i),
+			//		})
+			//	}
 		}
 		result = append(result, pk)
 	}

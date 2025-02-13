@@ -90,6 +90,22 @@ func convertPacketFunc(pid uint32, cur func() packet.Packet) func() packet.Packe
 		return func() packet.Packet { return &legacypacket.StartGame{} }
 	case packet.IDCodeBuilderSource:
 		return func() packet.Packet { return &legacypacket.CodeBuilderSource{} }
+	case packet.IDItemRegistry:
+		return func() packet.Packet { return &legacypacket.ItemRegistry{} }
+	case packet.IDStructureBlockUpdate:
+		return func() packet.Packet { return &legacypacket.StructureBlockUpdate{} }
+	case packet.IDBossEvent:
+		return func() packet.Packet { return &legacypacket.BossEvent{} }
+	case packet.IDCameraAimAssistPresets:
+		return func() packet.Packet { return &legacypacket.CameraAimAssistPresets{} }
+	case packet.IDCommandBlockUpdate:
+		return func() packet.Packet { return &legacypacket.CommandBlockUpdate{} }
+	case packet.IDCreativeContent:
+		return func() packet.Packet { return &legacypacket.CreativeContent{} }
+	case packet.IDUpdateAbilities:
+		return func() packet.Packet { return &legacypacket.UpdateAbilities{} }
+	case packet.IDClientCheatAbility:
+		return func() packet.Packet { return &legacypacket.ClientCheatAbility{} }
 	default:
 		return cur
 	}
@@ -313,7 +329,7 @@ func (p *Protocol) downgradePackets(pks []packet.Packet, conn *minecraft.Conn) [
 				GameType:         pk.GameType,
 				EntityMetadata:   pk.EntityMetadata,
 				EntityProperties: pk.EntityProperties,
-				AbilityData:      pk.AbilityData,
+				AbilityData:      (&proto.AbilityData{}).FromLatest(pk.AbilityData),
 				EntityLinks:      links,
 				DeviceID:         pk.DeviceID,
 				BuildPlatform:    pk.BuildPlatform,
@@ -445,7 +461,15 @@ func (p *Protocol) downgradePackets(pks []packet.Packet, conn *minecraft.Conn) [
 			pk.GameVersion = p.ver
 			pk.BaseGameVersion = p.ver
 
+			items := make([]proto.LegacyItemRegistryEntry, len(conn.GameData().Items))
+			for i, it := range conn.GameData().Items {
+				items[i] = (&proto.LegacyItemRegistryEntry{}).FromLatest(it)
+			}
+
+			items = p.itemTranslator.DowngradeLegacyItemRegistry(items)
+
 			pks[pkIndex] = &legacypacket.StartGame{
+				Items:                          items,
 				EntityUniqueID:                 pk.EntityUniqueID,
 				EntityRuntimeID:                pk.EntityRuntimeID,
 				PlayerGameMode:                 pk.PlayerGameMode,
@@ -509,7 +533,6 @@ func (p *Protocol) downgradePackets(pks []packet.Packet, conn *minecraft.Conn) [
 				Time:                           pk.Time,
 				EnchantmentSeed:                pk.EnchantmentSeed,
 				Blocks:                         pk.Blocks,
-				Items:                          pk.Items,
 				MultiPlayerCorrelationID:       pk.MultiPlayerCorrelationID,
 				ServerAuthoritativeInventory:   pk.ServerAuthoritativeInventory,
 				GameVersion:                    pk.GameVersion,
@@ -530,6 +553,75 @@ func (p *Protocol) downgradePackets(pks []packet.Packet, conn *minecraft.Conn) [
 				Operation:  pk.Operation,
 				Category:   pk.Category,
 				CodeStatus: pk.CodeStatus,
+			}
+		case *packet.ItemRegistry:
+			items := make([]proto.ItemEntry, len(pk.Items))
+			for i, it := range pk.Items {
+				items[i] = (&proto.ItemEntry{}).FromLatest(it)
+			}
+			pks[pkIndex] = &legacypacket.ItemRegistry{
+				Items: items,
+			}
+		case *packet.StructureBlockUpdate:
+			pks[pkIndex] = &legacypacket.StructureBlockUpdate{
+				Position:              pk.Position,
+				StructureName:         pk.StructureName,
+				FilteredStructureName: pk.FilteredStructureName,
+				DataField:             pk.DataField,
+				IncludePlayers:        pk.IncludePlayers,
+				ShowBoundingBox:       pk.ShowBoundingBox,
+				StructureBlockType:    pk.StructureBlockType,
+				Settings:              pk.Settings,
+				RedstoneSaveMode:      pk.RedstoneSaveMode,
+				ShouldTrigger:         pk.ShouldTrigger,
+				Waterlogged:           pk.Waterlogged,
+			}
+		case *packet.BossEvent:
+			pks[pkIndex] = &legacypacket.BossEvent{
+				BossEntityUniqueID:   pk.BossEntityUniqueID,
+				EventType:            pk.EventType,
+				PlayerUniqueID:       pk.PlayerUniqueID,
+				BossBarTitle:         pk.BossBarTitle,
+				FilteredBossBarTitle: pk.FilteredBossBarTitle,
+				HealthPercentage:     pk.HealthPercentage,
+				ScreenDarkening:      pk.ScreenDarkening,
+				Colour:               pk.Colour,
+				Overlay:              pk.Overlay,
+			}
+		case *packet.CameraAimAssistPresets:
+			pks[pkIndex] = &legacypacket.CameraAimAssistPresets{
+				CategoryGroups: pk.CategoryGroups,
+				Presets:        pk.Presets,
+				Operation:      pk.Operation,
+			}
+		case *packet.CommandBlockUpdate:
+			pks[pkIndex] = &legacypacket.CommandBlockUpdate{
+				Block:                   pk.Block,
+				Position:                pk.Position,
+				Mode:                    pk.Mode,
+				NeedsRedstone:           pk.NeedsRedstone,
+				Conditional:             pk.Conditional,
+				MinecartEntityRuntimeID: pk.MinecartEntityRuntimeID,
+				Command:                 pk.Command,
+				LastOutput:              pk.LastOutput,
+				Name:                    pk.Name,
+				FilteredName:            pk.FilteredName,
+				ShouldTrackOutput:       pk.ShouldTrackOutput,
+				TickDelay:               pk.TickDelay,
+				ExecuteOnFirstTick:      pk.ExecuteOnFirstTick,
+			}
+		case *packet.CreativeContent:
+			items := make([]proto.CreativeItem, len(pk.Items))
+			for i, it := range pk.Items {
+				items[i] = (&proto.CreativeItem{}).FromLatest(it)
+			}
+			pks[pkIndex] = &legacypacket.CreativeContent{
+				Groups: pk.Groups,
+				Items:  items,
+			}
+		case *packet.UpdateAbilities:
+			pks[pkIndex] = &legacypacket.UpdateAbilities{
+				AbilityData: (&proto.AbilityData{}).FromLatest(pk.AbilityData),
 			}
 		}
 	}
@@ -709,7 +801,7 @@ func (p *Protocol) upgradePackets(pks []packet.Packet, conn *minecraft.Conn) []p
 				GameType:         pk.GameType,
 				EntityMetadata:   pk.EntityMetadata,
 				EntityProperties: pk.EntityProperties,
-				AbilityData:      pk.AbilityData,
+				AbilityData:      pk.AbilityData.ToLatest(),
 				EntityLinks:      links,
 				DeviceID:         pk.DeviceID,
 				BuildPlatform:    pk.BuildPlatform,
@@ -901,7 +993,6 @@ func (p *Protocol) upgradePackets(pks []packet.Packet, conn *minecraft.Conn) []p
 				Time:                           pk.Time,
 				EnchantmentSeed:                pk.EnchantmentSeed,
 				Blocks:                         pk.Blocks,
-				Items:                          pk.Items,
 				MultiPlayerCorrelationID:       pk.MultiPlayerCorrelationID,
 				ServerAuthoritativeInventory:   pk.ServerAuthoritativeInventory,
 				GameVersion:                    pk.GameVersion,
@@ -923,6 +1014,65 @@ func (p *Protocol) upgradePackets(pks []packet.Packet, conn *minecraft.Conn) []p
 				Category:   pk.Category,
 				CodeStatus: pk.CodeStatus,
 			}
+		case *legacypacket.BossEvent:
+			pks[pkIndex] = &packet.BossEvent{
+				BossEntityUniqueID:   pk.BossEntityUniqueID,
+				EventType:            pk.EventType,
+				PlayerUniqueID:       pk.PlayerUniqueID,
+				BossBarTitle:         pk.BossBarTitle,
+				FilteredBossBarTitle: pk.FilteredBossBarTitle,
+				HealthPercentage:     pk.HealthPercentage,
+				ScreenDarkening:      pk.ScreenDarkening,
+				Colour:               pk.Colour,
+				Overlay:              pk.Overlay,
+			}
+		case *legacypacket.CommandBlockUpdate:
+			pks[pkIndex] = &packet.CommandBlockUpdate{
+				Block:                   pk.Block,
+				Position:                pk.Position,
+				Mode:                    pk.Mode,
+				NeedsRedstone:           pk.NeedsRedstone,
+				Conditional:             pk.Conditional,
+				MinecartEntityRuntimeID: pk.MinecartEntityRuntimeID,
+				Command:                 pk.Command,
+				LastOutput:              pk.LastOutput,
+				Name:                    pk.Name,
+				FilteredName:            pk.FilteredName,
+				ShouldTrackOutput:       pk.ShouldTrackOutput,
+				TickDelay:               pk.TickDelay,
+				ExecuteOnFirstTick:      pk.ExecuteOnFirstTick,
+			}
+		case *legacypacket.CreativeContent:
+			items := make([]protocol.CreativeItem, len(pk.Items))
+			for i, it := range pk.Items {
+				items[i] = it.ToLatest()
+			}
+			pks[pkIndex] = &packet.CreativeContent{
+				Groups: pk.Groups,
+				Items:  items,
+			}
+		case *legacypacket.ItemRegistry:
+			items := make([]protocol.ItemEntry, len(pk.Items))
+			for i, it := range pk.Items {
+				items[i] = it.ToLatest()
+			}
+			pks[pkIndex] = &packet.ItemRegistry{Items: items}
+		case *legacypacket.StructureBlockUpdate:
+			pks[pkIndex] = &packet.StructureBlockUpdate{
+				Position:              pk.Position,
+				StructureName:         pk.StructureName,
+				FilteredStructureName: pk.FilteredStructureName,
+				DataField:             pk.DataField,
+				IncludePlayers:        pk.IncludePlayers,
+				ShowBoundingBox:       pk.ShowBoundingBox,
+				StructureBlockType:    pk.StructureBlockType,
+				Settings:              pk.Settings,
+				RedstoneSaveMode:      pk.RedstoneSaveMode,
+				ShouldTrigger:         pk.ShouldTrigger,
+				Waterlogged:           pk.Waterlogged,
+			}
+		case *legacypacket.UpdateAbilities:
+			pks[pkIndex] = &packet.UpdateAbilities{AbilityData: pk.AbilityData.ToLatest()}
 		}
 	}
 	return pks

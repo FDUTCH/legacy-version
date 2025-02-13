@@ -10,6 +10,7 @@ import (
 	"log"
 	"os"
 	"sync"
+	"time"
 )
 
 // The following program implements a proxy that forwards players from one local address to a remote address.
@@ -28,6 +29,7 @@ func main() {
 	listener, err := minecraft.ListenConfig{
 		StatusProvider: p,
 		AcceptedProtocols: []minecraft.Protocol{
+			legacyver.New766(),
 			legacyver.New748(),
 			legacyver.New729(),
 			legacyver.New712(),
@@ -54,7 +56,7 @@ func handleConn(conn *minecraft.Conn, listener *minecraft.Listener, config confi
 	serverConn, err := minecraft.Dialer{
 		TokenSource: src,
 		ClientData:  conn.ClientData(),
-	}.Dial("raknet", config.Connection.RemoteAddress)
+	}.DialTimeout("raknet", config.Connection.RemoteAddress, time.Second*100)
 	if err != nil {
 		panic(err)
 	}

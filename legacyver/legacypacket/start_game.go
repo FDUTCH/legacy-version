@@ -200,7 +200,7 @@ type StartGame struct {
 	Blocks []protocol.BlockEntry
 	// Items is a list of all items with their legacy IDs which are available in the game. Failing to send any
 	// of the items that are in the game will crash mobile clients.
-	Items []protocol.ItemEntry
+	Items []proto.LegacyItemRegistryEntry
 	// MultiPlayerCorrelationID is a unique ID specifying the multi-player session of the player. A random
 	// UUID should be filled out for this field.
 	MultiPlayerCorrelationID string
@@ -316,7 +316,11 @@ func (pk *StartGame) Marshal(io protocol.IO) {
 	io.Int64(&pk.Time)
 	io.Varint32(&pk.EnchantmentSeed)
 	protocol.Slice(io, &pk.Blocks)
-	protocol.Slice(io, &pk.Items)
+	if proto.IsProtoLT(io, proto.ID776) {
+		protocol.Slice(io, &pk.Items)
+	} else {
+		proto.EmptySlice(io, &pk.Items)
+	}
 	io.String(&pk.MultiPlayerCorrelationID)
 	io.Bool(&pk.ServerAuthoritativeInventory)
 	io.String(&pk.GameVersion)

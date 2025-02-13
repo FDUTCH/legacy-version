@@ -41,6 +41,10 @@ type CameraPreset struct {
 	// Radius is only used in a follow_orbit camera and controls how far away from the player the camera should
 	// be rendered.
 	Radius protocol.Optional[float32]
+	// MinYawLimit is the minimum yaw limit of the camera.
+	MinYawLimit protocol.Optional[float32]
+	// MaxYawLimit is the maximum yaw limit of the camera.
+	MaxYawLimit protocol.Optional[float32]
 	// AudioListener defines where the audio should be played from when using this preset. This is one of the
 	// constants above.
 	AudioListener protocol.Optional[byte]
@@ -95,6 +99,8 @@ func (x *CameraPreset) ToLatest() protocol.CameraPreset {
 		ViewOffset:                  x.ViewOffset,
 		EntityOffset:                x.EntityOffset,
 		Radius:                      x.Radius,
+		MinYawLimit:                 x.MinYawLimit,
+		MaxYawLimit:                 x.MaxYawLimit,
 		AudioListener:               x.AudioListener,
 		PlayerEffects:               x.PlayerEffects,
 		AlignTargetAndCameraForward: x.AlignTargetAndCameraForward,
@@ -122,6 +128,10 @@ func (x *CameraPreset) Marshal(r protocol.IO) {
 	}
 	if IsProtoGTE(r, ID766) {
 		protocol.OptionalFunc(r, &x.TrackingRadius, r.Float32)
+	}
+	if IsProtoGTE(r, ID776) {
+		protocol.OptionalFunc(r, &x.MinYawLimit, r.Float32)
+		protocol.OptionalFunc(r, &x.MaxYawLimit, r.Float32)
 	}
 	protocol.OptionalFunc(r, &x.ViewOffset, r.Vec2)
 	if IsProtoGTE(r, ID729) {
