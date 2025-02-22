@@ -31,7 +31,7 @@ func New671() *Protocol {
 	return &Protocol{
 		ver:             "1.20.80",
 		id:              proto.ID671,
-		blockTranslator: NewBlockTranslator(blockMapping, latestBlockMapping, chunk.NewNetworkPersistentEncoding(blockMapping, BlockVersion671), chunk.NewBlockPaletteEncoding(blockMapping, BlockVersion671), false),
+		blockTranslator: NewBlockTranslator(blockMapping, blockMappingLatest, chunk.NewNetworkPersistentEncoding(blockMapping, BlockVersion671), chunk.NewBlockPaletteEncoding(blockMapping, BlockVersion671), false),
 		itemTranslator:  NewItemTranslator(itemMapping, itemMappingLatest, blockMapping, blockMappingLatest),
 	}
 }

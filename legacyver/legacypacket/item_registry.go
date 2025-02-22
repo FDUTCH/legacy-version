@@ -20,6 +20,8 @@ type ItemRegistry struct {
 func (*ItemRegistry) ID() uint32 {
 	return packet.IDItemRegistry
 }
+
+// Marshal ...
 func (pk *ItemRegistry) Marshal(io protocol.IO) {
 	protocol.Slice(io, &pk.Items)
 }

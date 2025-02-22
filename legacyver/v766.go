@@ -30,7 +30,7 @@ func New766() *Protocol {
 	return &Protocol{
 		ver:             "1.21.50",
 		id:              proto.ID766,
-		blockTranslator: NewBlockTranslator(blockMapping766, latestBlockMapping, chunk.NewNetworkPersistentEncoding(blockMapping766, BlockVersion766), chunk.NewBlockPaletteEncoding(blockMapping766, BlockVersion766), false),
+		blockTranslator: NewBlockTranslator(blockMapping766, blockMappingLatest, chunk.NewNetworkPersistentEncoding(blockMapping766, BlockVersion766), chunk.NewBlockPaletteEncoding(blockMapping766, BlockVersion766), false),
 		itemTranslator:  NewItemTranslator(itemMapping766, itemMappingLatest, blockMapping766, blockMappingLatest),
 	}
 }

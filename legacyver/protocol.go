@@ -559,9 +559,13 @@ func (p *Protocol) downgradePackets(pks []packet.Packet, conn *minecraft.Conn) [
 			for i, it := range pk.Items {
 				items[i] = (&proto.ItemEntry{}).FromLatest(it)
 			}
+
+			items = p.itemTranslator.DowngradeItemEntries(items)
+
 			pks[pkIndex] = &legacypacket.ItemRegistry{
 				Items: items,
 			}
+			return []packet.Packet{}
 		case *packet.StructureBlockUpdate:
 			pks[pkIndex] = &legacypacket.StructureBlockUpdate{
 				Position:              pk.Position,
@@ -1052,10 +1056,13 @@ func (p *Protocol) upgradePackets(pks []packet.Packet, conn *minecraft.Conn) []p
 				Items:  items,
 			}
 		case *legacypacket.ItemRegistry:
+			pk.Items = p.itemTranslator.UpgradeItemEntries(pk.Items)
+
 			items := make([]protocol.ItemEntry, len(pk.Items))
 			for i, it := range pk.Items {
 				items[i] = it.ToLatest()
 			}
+
 			pks[pkIndex] = &packet.ItemRegistry{Items: items}
 		case *legacypacket.StructureBlockUpdate:
 			pks[pkIndex] = &packet.StructureBlockUpdate{

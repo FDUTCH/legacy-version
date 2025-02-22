@@ -43,6 +43,10 @@ type ItemTranslator interface {
 	DowngradeLegacyItemRegistry(entries []proto.LegacyItemRegistryEntry) []proto.LegacyItemRegistryEntry
 	// UpgradeLegacyItemRegistry ...
 	UpgradeLegacyItemRegistry(entries []proto.LegacyItemRegistryEntry) []proto.LegacyItemRegistryEntry
+	// DowngradeItemEntries ...
+	DowngradeItemEntries(entries []proto.ItemEntry) []proto.ItemEntry
+	// UpgradeItemEntries ...
+	UpgradeItemEntries(entries []proto.ItemEntry) []proto.ItemEntry
 }
 
 type DefaultItemTranslator struct {
@@ -554,6 +558,70 @@ func (t *DefaultItemTranslator) UpgradeLegacyItemRegistry(entries []proto.Legacy
 	for rid, i := range t.CustomItems() {
 		name, _ := i.EncodeItem()
 		entries = append(entries, proto.LegacyItemRegistryEntry{
+			Name:           name,
+			RuntimeID:      int16(rid),
+			ComponentBased: true,
+		})
+	}
+	return entries
+}
+
+func (t *DefaultItemTranslator) DowngradeItemEntries(entries []proto.ItemEntry) []proto.ItemEntry {
+	for i, entry := range entries {
+		if !entry.ComponentBased {
+			itemType := t.DowngradeItemType(protocol.ItemType{
+				NetworkID:     int32(entry.RuntimeID),
+				MetadataValue: 0,
+			})
+			if itemType.NetworkID == t.mapping.Air() {
+				removeIndex(entries, i)
+				continue
+			}
+			entry.RuntimeID = int16(itemType.NetworkID)
+
+			var ok bool
+			if entry.Name, ok = t.mapping.ItemRuntimeIDToName(int32(entry.RuntimeID)); !ok {
+				panic(entry)
+			}
+		} else {
+			t.latest.RegisterEntryRID(entry.Name, int32(entry.RuntimeID), 2)
+			entry.RuntimeID = int16(t.mapping.RegisterEntry(entry.Name))
+		}
+		entries[i] = entry
+	}
+	for rid, i := range t.CustomItems() {
+		name, _ := i.EncodeItem()
+		entries = append(entries, proto.ItemEntry{
+			Name:           name,
+			RuntimeID:      int16(rid),
+			ComponentBased: true,
+		})
+	}
+	return entries
+}
+
+func (t *DefaultItemTranslator) UpgradeItemEntries(entries []proto.ItemEntry) []proto.ItemEntry {
+	for i, entry := range entries {
+		if !entry.ComponentBased {
+			itemType := t.UpgradeItemType(protocol.ItemType{
+				NetworkID:     int32(entry.RuntimeID),
+				MetadataValue: 0,
+			})
+			entry.RuntimeID = int16(itemType.NetworkID)
+
+			var ok bool
+			if entry.Name, ok = t.latest.ItemRuntimeIDToName(int32(entry.RuntimeID)); !ok {
+				panic(entry)
+			}
+		} else {
+			t.latest.RegisterEntryRID(entry.Name, int32(entry.RuntimeID), 2)
+			entry.RuntimeID = int16(t.mapping.RegisterEntry(entry.Name))
+		}
+		entries[i] = entry
+	}
+	for rid, i := range t.CustomItems() {
+		name, _ := i.EncodeItem()
+		entries = append(entries, proto.ItemEntry{
 			Name:           name,
 			RuntimeID:      int16(rid),
 			ComponentBased: true,

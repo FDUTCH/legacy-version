@@ -18,15 +18,10 @@ const (
 )
 
 var (
-	//go:embed data/block_states_766.nbt
-	latestBlockStateData []byte
-
-	// latestBlockMapping is the BlockMapping used for translating blocks between versions.
-	latestBlockMapping = mapping.NewBlockMapping(latestBlockStateData)
 	// LatestNetworkPersistentEncoding is the Encoding used for sending a Chunk over network. It uses NBT, unlike NetworkEncoding.
-	LatestNetworkPersistentEncoding = chunk.NewNetworkPersistentEncoding(latestBlockMapping, BlockVersionLatest)
+	LatestNetworkPersistentEncoding = chunk.NewNetworkPersistentEncoding(blockMappingLatest, BlockVersionLatest)
 	// LatestBlockPaletteEncoding is the paletteEncoding used for encoding a palette of block states encoded as NBT.
-	LatestBlockPaletteEncoding = chunk.NewBlockPaletteEncoding(latestBlockMapping, BlockVersionLatest)
+	LatestBlockPaletteEncoding = chunk.NewBlockPaletteEncoding(blockMappingLatest, BlockVersionLatest)
 )
 
 type BlockTranslator interface {
