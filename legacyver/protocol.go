@@ -627,6 +627,8 @@ func (p *Protocol) downgradePackets(pks []packet.Packet, conn *minecraft.Conn) [
 			pks[pkIndex] = &legacypacket.UpdateAbilities{
 				AbilityData: (&proto.AbilityData{}).FromLatest(pk.AbilityData),
 			}
+		case *packet.PlayerSkin:
+			pk.Skin.GeometryDataEngineVersion = []byte(p.Ver())
 		}
 	}
 
