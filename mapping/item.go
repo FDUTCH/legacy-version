@@ -11,8 +11,12 @@ type Item interface {
 	ItemRuntimeIDToName(int32) (string, bool)
 	// ItemNameToRuntimeID converts a string ID to an item runtime ID.
 	ItemNameToRuntimeID(string) (int32, bool)
+	// ItemRuntimeIDToVersion converts an item runtime ID to its version.
+	ItemRuntimeIDToVersion(int32) (uint8, bool)
+	// ItemRuntimeIDToData converts an item runtime ID to its data.
+	ItemRuntimeIDToData(int32) (map[string]any, bool)
 	RegisterEntry(string) int32
-	RegisterEntryRID(string, int32, uint8)
+	RegisterEntryRID(string, int32, uint8, map[string]any)
 	Air() int32
 	ItemVersion() uint16
 }
@@ -25,14 +29,17 @@ type DefaultItemMapping struct {
 	itemNamesToRuntimeIDs map[string]int32
 	// itemRuntimeIDToVersion holds a map to translate item runtime IDs to versions.
 	itemRuntimeIDToVersion map[int32]uint8
-	airRID                 int32
-	itemVersion            uint16
+	// itemRuntimeIDToData holds a map to translate item runtime IDs to data.
+	itemRuntimeIDToData map[int32]map[string]any
+	airRID              int32
+	itemVersion         uint16
 }
 
 func NewItemMapping(itemRuntimeIDData []byte, requiredItemList []byte, itemVersion uint16, direct bool) *DefaultItemMapping {
 	itemRuntimeIDsToNames := make(map[int32]string)
 	itemNamesToRuntimeIDs := make(map[string]int32)
 	itemRuntimeIDToVersion := make(map[int32]uint8)
+	itemRuntimeIDToData := make(map[int32]map[string]any)
 	var airRID *int32
 
 	if direct {
@@ -50,9 +57,10 @@ func NewItemMapping(itemRuntimeIDData []byte, requiredItemList []byte, itemVersi
 		}
 	} else {
 		var m map[string]struct {
-			RuntimeID      int16  `json:"runtime_id"`
-			ComponentBased bool   `json:"component_based"`
-			Version        *uint8 `json:"version"`
+			RuntimeID      int16          `json:"runtime_id"`
+			ComponentBased bool           `json:"component_based"`
+			Version        *uint8         `json:"version"`
+			Data           map[string]any `json:"data,omitempty"`
 		}
 		if err := json.Unmarshal(requiredItemList, &m); err != nil {
 			panic(err)
@@ -68,6 +76,9 @@ func NewItemMapping(itemRuntimeIDData []byte, requiredItemList []byte, itemVersi
 			if data.Version != nil {
 				itemRuntimeIDToVersion[rid] = *data.Version
 			}
+			if data.Data != nil {
+				itemRuntimeIDToData[rid] = data.Data
+			}
 		}
 	}
 
@@ -75,7 +86,7 @@ func NewItemMapping(itemRuntimeIDData []byte, requiredItemList []byte, itemVersi
 		panic("couldn't find air")
 	}
 
-	return &DefaultItemMapping{itemRuntimeIDsToNames: itemRuntimeIDsToNames, itemNamesToRuntimeIDs: itemNamesToRuntimeIDs, itemRuntimeIDToVersion: itemRuntimeIDToVersion, airRID: *airRID, itemVersion: itemVersion}
+	return &DefaultItemMapping{itemRuntimeIDsToNames: itemRuntimeIDsToNames, itemNamesToRuntimeIDs: itemNamesToRuntimeIDs, itemRuntimeIDToVersion: itemRuntimeIDToVersion, airRID: *airRID, itemVersion: itemVersion, itemRuntimeIDToData: itemRuntimeIDToData}
 }
 
 func (m *DefaultItemMapping) ItemRuntimeIDToName(runtimeID int32) (name string, found bool) {
@@ -99,6 +110,13 @@ func (m *DefaultItemMapping) ItemRuntimeIDToVersion(runtimeID int32) (version ui
 	return v, ok
 }
 
+func (m *DefaultItemMapping) ItemRuntimeIDToData(runtimeID int32) (data map[string]any, found bool) {
+	defer m.mu.Unlock()
+	m.mu.Lock()
+	d, ok := m.itemRuntimeIDToData[runtimeID]
+	return d, ok
+}
+
 func (m *DefaultItemMapping) RegisterEntry(name string) int32 {
 	defer m.mu.Unlock()
 	m.mu.Lock()
@@ -111,13 +129,16 @@ func (m *DefaultItemMapping) RegisterEntry(name string) int32 {
 	return nextRID
 }
 
-func (m *DefaultItemMapping) RegisterEntryRID(name string, rid int32, version uint8) {
+func (m *DefaultItemMapping) RegisterEntryRID(name string, rid int32, version uint8, data map[string]any) {
 	defer m.mu.Unlock()
 	m.mu.Lock()
 	if _, ok := m.itemNamesToRuntimeIDs[name]; !ok {
 		m.itemNamesToRuntimeIDs[name] = rid
 		m.itemRuntimeIDsToNames[rid] = name
 		m.itemRuntimeIDToVersion[rid] = version
+		if data != nil {
+			m.itemRuntimeIDToData[rid] = data
+		}
 	}
 }
 

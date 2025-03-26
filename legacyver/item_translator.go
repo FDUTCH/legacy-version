@@ -520,7 +520,7 @@ func (t *DefaultItemTranslator) DowngradeLegacyItemRegistry(entries []proto.Lega
 				panic(itemType)
 			}
 		} else {
-			t.latest.RegisterEntryRID(entry.Name, int32(entry.RuntimeID), 2)
+			t.latest.RegisterEntryRID(entry.Name, int32(entry.RuntimeID), 2, nil)
 			entry.RuntimeID = int16(t.mapping.RegisterEntry(entry.Name))
 		}
 		entries[i] = entry
@@ -550,7 +550,7 @@ func (t *DefaultItemTranslator) UpgradeLegacyItemRegistry(entries []proto.Legacy
 				panic(itemType)
 			}
 		} else {
-			t.latest.RegisterEntryRID(entry.Name, int32(entry.RuntimeID), 2)
+			t.latest.RegisterEntryRID(entry.Name, int32(entry.RuntimeID), 2, nil)
 			entry.RuntimeID = int16(t.mapping.RegisterEntry(entry.Name))
 		}
 		entries[i] = entry
@@ -583,8 +583,16 @@ func (t *DefaultItemTranslator) DowngradeItemEntries(entries []proto.ItemEntry) 
 			if entry.Name, ok = t.mapping.ItemRuntimeIDToName(int32(entry.RuntimeID)); !ok {
 				panic(entry)
 			}
+			entryVer, ok := t.mapping.ItemRuntimeIDToVersion(int32(entry.RuntimeID))
+			if ok {
+				entry.Version = int32(entryVer)
+			}
+			entryData, ok := t.mapping.ItemRuntimeIDToData(int32(entry.RuntimeID))
+			if ok {
+				entry.Data = entryData
+			}
 		} else {
-			t.latest.RegisterEntryRID(entry.Name, int32(entry.RuntimeID), 2)
+			t.latest.RegisterEntryRID(entry.Name, int32(entry.RuntimeID), 2, entry.Data)
 			entry.RuntimeID = int16(t.mapping.RegisterEntry(entry.Name))
 		}
 		entries[i] = entry
@@ -613,8 +621,18 @@ func (t *DefaultItemTranslator) UpgradeItemEntries(entries []proto.ItemEntry) []
 			if entry.Name, ok = t.latest.ItemRuntimeIDToName(int32(entry.RuntimeID)); !ok {
 				panic(entry)
 			}
+
+			entryVer, ok := t.mapping.ItemRuntimeIDToVersion(int32(entry.RuntimeID))
+			if ok {
+				entry.Version = int32(entryVer)
+			}
+
+			entryData, ok := t.mapping.ItemRuntimeIDToData(int32(entry.RuntimeID))
+			if ok {
+				entry.Data = entryData
+			}
 		} else {
-			t.latest.RegisterEntryRID(entry.Name, int32(entry.RuntimeID), 2)
+			t.latest.RegisterEntryRID(entry.Name, int32(entry.RuntimeID), 2, entry.Data)
 			entry.RuntimeID = int16(t.mapping.RegisterEntry(entry.Name))
 		}
 		entries[i] = entry

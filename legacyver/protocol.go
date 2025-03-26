@@ -106,6 +106,12 @@ func convertPacketFunc(pid uint32, cur func() packet.Packet) func() packet.Packe
 		return func() packet.Packet { return &legacypacket.UpdateAbilities{} }
 	case packet.IDClientCheatAbility:
 		return func() packet.Packet { return &legacypacket.ClientCheatAbility{} }
+	case packet.IDClientMovementPredictionSync:
+		return func() packet.Packet { return &legacypacket.ClientMovementPredictionSync{} }
+	case packet.IDLevelSoundEvent:
+		return func() packet.Packet { return &legacypacket.LevelSoundEvent{} }
+	case packet.IDSetHud:
+		return func() packet.Packet { return &legacypacket.SetHud{} }
 	default:
 		return cur
 	}
@@ -629,6 +635,40 @@ func (p *Protocol) downgradePackets(pks []packet.Packet, conn *minecraft.Conn) [
 			}
 		case *packet.PlayerSkin:
 			pk.Skin.GeometryDataEngineVersion = []byte(p.Ver())
+		case *packet.ClientMovementPredictionSync:
+			actorFlags := pk.ActorFlags
+			if p.ID() < proto.ID786 {
+				actorFlags = fitBitset(actorFlags, 120)
+			}
+			pks[pkIndex] = &legacypacket.ClientMovementPredictionSync{
+				ActorFlags:              actorFlags,
+				BoundingBoxScale:        pk.BoundingBoxScale,
+				BoundingBoxWidth:        pk.BoundingBoxWidth,
+				BoundingBoxHeight:       pk.BoundingBoxHeight,
+				MovementSpeed:           pk.MovementSpeed,
+				UnderwaterMovementSpeed: pk.UnderwaterMovementSpeed,
+				LavaMovementSpeed:       pk.LavaMovementSpeed,
+				JumpStrength:            pk.JumpStrength,
+				Health:                  pk.Health,
+				Hunger:                  pk.Hunger,
+				EntityUniqueID:          pk.EntityUniqueID,
+				Flying:                  pk.Flying,
+			}
+		case *packet.LevelSoundEvent:
+			pks[pkIndex] = &legacypacket.LevelSoundEvent{
+				SoundType:             pk.SoundType,
+				Position:              pk.Position,
+				ExtraData:             pk.ExtraData,
+				EntityType:            pk.EntityType,
+				BabyMob:               pk.BabyMob,
+				DisableRelativeVolume: pk.DisableRelativeVolume,
+				EntityUniqueID:        pk.EntityUniqueID,
+			}
+		case *packet.SetHud:
+			pks[pkIndex] = &legacypacket.SetHud{
+				Elements:   pk.Elements,
+				Visibility: pk.Visibility,
+			}
 		}
 	}
 
@@ -1082,6 +1122,36 @@ func (p *Protocol) upgradePackets(pks []packet.Packet, conn *minecraft.Conn) []p
 			}
 		case *legacypacket.UpdateAbilities:
 			pks[pkIndex] = &packet.UpdateAbilities{AbilityData: pk.AbilityData.ToLatest()}
+		case *legacypacket.ClientMovementPredictionSync:
+			pks[pkIndex] = &packet.ClientMovementPredictionSync{
+				ActorFlags:              fitBitset(pk.ActorFlags, packet.ClientMovementPredictionSyncBitsetSize),
+				BoundingBoxScale:        pk.BoundingBoxScale,
+				BoundingBoxWidth:        pk.BoundingBoxWidth,
+				BoundingBoxHeight:       pk.BoundingBoxHeight,
+				MovementSpeed:           pk.MovementSpeed,
+				UnderwaterMovementSpeed: pk.UnderwaterMovementSpeed,
+				LavaMovementSpeed:       pk.LavaMovementSpeed,
+				JumpStrength:            pk.JumpStrength,
+				Health:                  pk.Health,
+				Hunger:                  pk.Hunger,
+				EntityUniqueID:          pk.EntityUniqueID,
+				Flying:                  pk.Flying,
+			}
+		case *legacypacket.LevelSoundEvent:
+			pks[pkIndex] = &packet.LevelSoundEvent{
+				SoundType:             pk.SoundType,
+				Position:              pk.Position,
+				ExtraData:             pk.ExtraData,
+				EntityType:            pk.EntityType,
+				BabyMob:               pk.BabyMob,
+				DisableRelativeVolume: pk.DisableRelativeVolume,
+				EntityUniqueID:        pk.EntityUniqueID,
+			}
+		case *legacypacket.SetHud:
+			pks[pkIndex] = &packet.SetHud{
+				Elements:   pk.Elements,
+				Visibility: pk.Visibility,
+			}
 		}
 	}
 	return pks

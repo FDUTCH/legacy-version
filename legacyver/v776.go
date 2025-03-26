@@ -2,6 +2,8 @@ package legacyver
 
 import (
 	_ "embed"
+	"github.com/akmalfairuz/legacy-version/internal/chunk"
+	"github.com/akmalfairuz/legacy-version/legacyver/proto"
 	"github.com/akmalfairuz/legacy-version/mapping"
 )
 
@@ -20,6 +22,15 @@ var (
 	//go:embed data/block_states_776.nbt
 	blockStateData776 []byte
 
-	itemMappingLatest  = mapping.NewItemMapping(itemRuntimeIDData776, requiredItemList776, ItemVersion776, false)
-	blockMappingLatest = mapping.NewBlockMapping(blockStateData776)
+	itemMapping776  = mapping.NewItemMapping(itemRuntimeIDData776, requiredItemList776, ItemVersion776, false)
+	blockMapping776 = mapping.NewBlockMapping(blockStateData776)
 )
+
+func New776() *Protocol {
+	return &Protocol{
+		ver:             "1.21.60",
+		id:              proto.ID776,
+		blockTranslator: NewBlockTranslator(blockMapping776, blockMappingLatest, chunk.NewNetworkPersistentEncoding(blockMapping776, BlockVersion776), chunk.NewBlockPaletteEncoding(blockMapping776, BlockVersion776), false),
+		itemTranslator:  NewItemTranslator(itemMapping776, itemMappingLatest, blockMapping776, blockMappingLatest),
+	}
+}

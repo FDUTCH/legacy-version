@@ -10,11 +10,11 @@ require (
 	github.com/pelletier/go-toml v1.9.5
 	github.com/rogpeppe/go-internal v1.13.1
 	github.com/samber/lo v1.47.0
-	github.com/sandertv/gophertunnel v1.44.1-0.20250211173944-b0dbda19ad6a
+	github.com/sandertv/gophertunnel v1.45.1-0.20250325213530-4e2b368f13ca
 	github.com/segmentio/fasthash v1.0.3
 	golang.org/x/exp v0.0.0-20241217172543-b2144cdd0a67
 	golang.org/x/image v0.21.0
-	golang.org/x/oauth2 v0.26.0
+	golang.org/x/oauth2 v0.28.0
 )
 
 require (
@@ -22,13 +22,13 @@ require (
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/df-mc/goleveldb v1.1.9 // indirect
 	github.com/go-jose/go-jose/v3 v3.0.3 // indirect
-	github.com/go-jose/go-jose/v4 v4.0.4 // indirect
-	github.com/golang/snappy v0.0.4 // indirect
-	github.com/klauspost/compress v1.17.11 // indirect
+	github.com/go-jose/go-jose/v4 v4.0.5 // indirect
+	github.com/golang/snappy v1.0.0 // indirect
+	github.com/klauspost/compress v1.18.0 // indirect
 	github.com/muhammadmuzzammil1998/jsonc v1.0.0 // indirect
-	github.com/sandertv/go-raknet v1.14.2 // indirect
-	golang.org/x/crypto v0.33.0 // indirect
+	github.com/sandertv/go-raknet v1.14.3-0.20250305181847-6af3e95113d6 // indirect
+	golang.org/x/crypto v0.36.0 // indirect
 	golang.org/x/mod v0.22.0 // indirect
-	golang.org/x/net v0.35.0 // indirect
-	golang.org/x/text v0.22.0 // indirect
+	golang.org/x/net v0.37.0 // indirect
+	golang.org/x/text v0.23.0 // indirect
 )
