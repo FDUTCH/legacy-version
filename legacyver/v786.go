@@ -13,13 +13,11 @@ const (
 )
 
 var (
-	//go:embed data/item_runtime_ids_786.nbt
-	itemRuntimeIDData786 []byte
 	//go:embed data/required_item_list_786.json
 	requiredItemList786 []byte
 	//go:embed data/block_states_786.nbt
 	blockStateData786 []byte
 
-	itemMappingLatest  = mapping.NewItemMapping(itemRuntimeIDData786, requiredItemList786, ItemVersion786, false)
+	itemMappingLatest  = mapping.NewItemMapping(requiredItemList786, ItemVersion786)
 	blockMappingLatest = mapping.NewBlockMapping(blockStateData786)
 )

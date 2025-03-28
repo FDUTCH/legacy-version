@@ -9,7 +9,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/pelletier/go-toml v1.9.5
 	github.com/rogpeppe/go-internal v1.13.1
-	github.com/samber/lo v1.47.0
+	github.com/samber/lo v1.49.1
 	github.com/sandertv/gophertunnel v1.45.1-0.20250325213530-4e2b368f13ca
 	github.com/segmentio/fasthash v1.0.3
 	golang.org/x/exp v0.0.0-20241217172543-b2144cdd0a67

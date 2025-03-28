@@ -15,8 +15,6 @@ const (
 )
 
 var (
-	//go:embed data/item_runtime_ids_712.nbt
-	itemRuntimeIDData712 []byte
 	//go:embed data/required_item_list_712.json
 	requiredItemList712 []byte
 	//go:embed data/block_states_712.nbt
@@ -24,7 +22,7 @@ var (
 )
 
 func New712() *Protocol {
-	itemMapping := mapping.NewItemMapping(itemRuntimeIDData712, requiredItemList712, ItemVersion712, false)
+	itemMapping := mapping.NewItemMapping(requiredItemList712, ItemVersion712)
 	blockMapping := mapping.NewBlockMapping(blockStateData712)
 
 	return &Protocol{

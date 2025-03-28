@@ -3,9 +3,11 @@ package legacyver
 import (
 	"github.com/akmalfairuz/legacy-version/legacyver/legacypacket"
 	"github.com/akmalfairuz/legacy-version/legacyver/proto"
+	"github.com/samber/lo"
 	"github.com/sandertv/gophertunnel/minecraft"
 	"github.com/sandertv/gophertunnel/minecraft/protocol"
 	"github.com/sandertv/gophertunnel/minecraft/protocol/packet"
+	"strings"
 )
 
 var (
@@ -568,10 +570,19 @@ func (p *Protocol) downgradePackets(pks []packet.Packet, conn *minecraft.Conn) [
 
 			items = p.itemTranslator.DowngradeItemEntries(items)
 
+			if p.ID() < proto.ID776 {
+				items = lo.Filter(items, func(item proto.ItemEntry, index int) bool {
+					return !strings.HasPrefix(item.Name, "minecraft:") && item.ComponentBased
+				}) // only custom items here
+
+				if len(items) < 1 {
+					return []packet.Packet{}
+				}
+			}
+
 			pks[pkIndex] = &legacypacket.ItemRegistry{
 				Items: items,
 			}
-			return []packet.Packet{}
 		case *packet.StructureBlockUpdate:
 			pks[pkIndex] = &legacypacket.StructureBlockUpdate{
 				Position:              pk.Position,

@@ -580,19 +580,11 @@ func (t *DefaultItemTranslator) DowngradeItemEntries(entries []proto.ItemEntry) 
 			entry.RuntimeID = int16(itemType.NetworkID)
 
 			var ok bool
-			if entry.Name, ok = t.mapping.ItemRuntimeIDToName(int32(entry.RuntimeID)); !ok {
-				panic(entry)
-			}
-			entryVer, ok := t.mapping.ItemRuntimeIDToVersion(int32(entry.RuntimeID))
-			if ok {
-				entry.Version = int32(entryVer)
-			}
-			entryData, ok := t.mapping.ItemRuntimeIDToData(int32(entry.RuntimeID))
-			if ok {
-				entry.Data = entryData
+			if entry.Name, ok = t.mapping.ItemRuntimeIDToName(itemType.NetworkID); !ok {
+				panic(itemType)
 			}
 		} else {
-			t.latest.RegisterEntryRID(entry.Name, int32(entry.RuntimeID), 2, entry.Data)
+			t.latest.RegisterEntryRID(entry.Name, int32(entry.RuntimeID), 2, nil)
 			entry.RuntimeID = int16(t.mapping.RegisterEntry(entry.Name))
 		}
 		entries[i] = entry
@@ -618,21 +610,11 @@ func (t *DefaultItemTranslator) UpgradeItemEntries(entries []proto.ItemEntry) []
 			entry.RuntimeID = int16(itemType.NetworkID)
 
 			var ok bool
-			if entry.Name, ok = t.latest.ItemRuntimeIDToName(int32(entry.RuntimeID)); !ok {
-				panic(entry)
-			}
-
-			entryVer, ok := t.mapping.ItemRuntimeIDToVersion(int32(entry.RuntimeID))
-			if ok {
-				entry.Version = int32(entryVer)
-			}
-
-			entryData, ok := t.mapping.ItemRuntimeIDToData(int32(entry.RuntimeID))
-			if ok {
-				entry.Data = entryData
+			if entry.Name, ok = t.latest.ItemRuntimeIDToName(itemType.NetworkID); !ok {
+				panic(itemType)
 			}
 		} else {
-			t.latest.RegisterEntryRID(entry.Name, int32(entry.RuntimeID), 2, entry.Data)
+			t.latest.RegisterEntryRID(entry.Name, int32(entry.RuntimeID), 2, nil)
 			entry.RuntimeID = int16(t.mapping.RegisterEntry(entry.Name))
 		}
 		entries[i] = entry

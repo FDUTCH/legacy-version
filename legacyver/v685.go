@@ -16,7 +16,7 @@ const (
 
 // New685 uses same data as 686
 func New685() *Protocol {
-	itemMapping := mapping.NewItemMapping(itemRuntimeIDData686, requiredItemList686, ItemVersion685, false)
+	itemMapping := mapping.NewItemMapping(requiredItemList686, ItemVersion685)
 	blockMapping := mapping.NewBlockMapping(blockStateData686)
 
 	return &Protocol{
