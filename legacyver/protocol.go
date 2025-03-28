@@ -611,9 +611,9 @@ func (p *Protocol) downgradePackets(pks []packet.Packet, conn *minecraft.Conn) [
 			}
 		case *packet.CameraAimAssistPresets:
 			pks[pkIndex] = &legacypacket.CameraAimAssistPresets{
-				CategoryGroups: pk.CategoryGroups,
-				Presets:        pk.Presets,
-				Operation:      pk.Operation,
+				Categories: pk.Categories,
+				Presets:    pk.Presets,
+				Operation:  pk.Operation,
 			}
 		case *packet.CommandBlockUpdate:
 			pks[pkIndex] = &legacypacket.CommandBlockUpdate{

@@ -10,7 +10,7 @@ require (
 	github.com/pelletier/go-toml v1.9.5
 	github.com/rogpeppe/go-internal v1.13.1
 	github.com/samber/lo v1.49.1
-	github.com/sandertv/gophertunnel v1.45.1-0.20250325213530-4e2b368f13ca
+	github.com/sandertv/gophertunnel v1.45.1
 	github.com/segmentio/fasthash v1.0.3
 	golang.org/x/exp v0.0.0-20241217172543-b2144cdd0a67
 	golang.org/x/image v0.21.0
@@ -29,6 +29,6 @@ require (
 	github.com/sandertv/go-raknet v1.14.3-0.20250305181847-6af3e95113d6 // indirect
 	golang.org/x/crypto v0.36.0 // indirect
 	golang.org/x/mod v0.22.0 // indirect
-	golang.org/x/net v0.37.0 // indirect
+	golang.org/x/net v0.38.0 // indirect
 	golang.org/x/text v0.23.0 // indirect
 )
