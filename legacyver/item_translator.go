@@ -103,7 +103,7 @@ func (t *DefaultItemTranslator) DowngradeItemType(input protocol.ItemType) proto
 }
 
 func (t *DefaultItemTranslator) DowngradeItemStack(input protocol.ItemStack) protocol.ItemStack {
-	if t.latest == t.mapping {
+	if t.latest == t.mapping || input.NetworkID == 0 {
 		return input
 	}
 	input.ItemType = t.DowngradeItemType(input.ItemType)
@@ -221,7 +221,7 @@ func (t *DefaultItemTranslator) UpgradeItemType(input protocol.ItemType) protoco
 }
 
 func (t *DefaultItemTranslator) UpgradeItemStack(input protocol.ItemStack) protocol.ItemStack {
-	if t.latest == t.mapping {
+	if t.latest == t.mapping || input.NetworkID == 0 {
 		return input
 	}
 	input.ItemType = t.UpgradeItemType(input.ItemType)
