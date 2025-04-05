@@ -36,13 +36,17 @@ func (*CorrectPlayerMovePrediction) ID() uint32 {
 }
 
 func (pk *CorrectPlayerMovePrediction) Marshal(io protocol.IO) {
-	io.Uint8(&pk.PredictionType)
+	if proto.IsProtoGTE(io, proto.ID671) {
+		io.Uint8(&pk.PredictionType)
+	}
 	io.Vec3(&pk.Position)
 	io.Vec3(&pk.Delta)
-	if pk.PredictionType == packet.PredictionTypeVehicle {
-		io.Vec2(&pk.Rotation)
-		if proto.IsProtoGTE(io, proto.ID712) {
-			protocol.OptionalFunc(io, &pk.VehicleAngularVelocity, io.Float32)
+	if proto.IsProtoGTE(io, proto.ID671) {
+		if pk.PredictionType == packet.PredictionTypeVehicle {
+			io.Vec2(&pk.Rotation)
+			if proto.IsProtoGTE(io, proto.ID712) {
+				protocol.OptionalFunc(io, &pk.VehicleAngularVelocity, io.Float32)
+			}
 		}
 	}
 	io.Bool(&pk.OnGround)

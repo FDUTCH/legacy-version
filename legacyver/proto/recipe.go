@@ -677,7 +677,9 @@ func marshalShaped(r protocol.IO, recipe *ShapedRecipe) {
 	r.UUID(&recipe.UUID)
 	r.String(&recipe.Block)
 	r.Varint32(&recipe.Priority)
-	r.Bool(&recipe.AssumeSymmetry)
+	if IsProtoGTE(r, ID671) {
+		r.Bool(&recipe.AssumeSymmetry)
+	}
 	if IsProtoGTE(r, ID685) {
 		protocol.Single(r, &recipe.UnlockRequirement)
 	}

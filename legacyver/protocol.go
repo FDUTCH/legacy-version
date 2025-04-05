@@ -114,6 +114,12 @@ func convertPacketFunc(pid uint32, cur func() packet.Packet) func() packet.Packe
 		return func() packet.Packet { return &legacypacket.LevelSoundEvent{} }
 	case packet.IDSetHud:
 		return func() packet.Packet { return &legacypacket.SetHud{} }
+	case packet.IDResourcePackStack:
+		return func() packet.Packet { return &legacypacket.ResourcePackStack{} }
+	case packet.IDUpdatePlayerGameType:
+		return func() packet.Packet { return &legacypacket.UpdatePlayerGameType{} }
+	case packet.IDSetActorMotion:
+		return func() packet.Packet { return &legacypacket.SetActorMotion{} }
 	default:
 		return cur
 	}
@@ -167,6 +173,28 @@ func (p *Protocol) downgradePackets(pks []packet.Packet, conn *minecraft.Conn) [
 		switch pk := pk.(type) {
 		case *packet.ClientCacheStatus:
 			pk.Enabled = false // TODO: enable when chunk translation is not broken
+		case *packet.SetActorMotion:
+			pks[pkIndex] = &legacypacket.SetActorMotion{
+				EntityRuntimeID: pk.EntityRuntimeID,
+				Velocity:        pk.Velocity,
+				Tick:            pk.Tick,
+			}
+		case *packet.ResourcePackStack:
+			pks[pkIndex] = &legacypacket.ResourcePackStack{
+				TexturePackRequired:          pk.TexturePackRequired,
+				BehaviourPacks:               pk.BehaviourPacks,
+				TexturePacks:                 pk.TexturePacks,
+				BaseGameVersion:              pk.BaseGameVersion,
+				Experiments:                  pk.Experiments,
+				ExperimentsPreviouslyToggled: pk.ExperimentsPreviouslyToggled,
+				IncludeEditorPacks:           pk.IncludeEditorPacks,
+			}
+		case *packet.UpdatePlayerGameType:
+			pks[pkIndex] = &legacypacket.UpdatePlayerGameType{
+				GameType:       pk.GameType,
+				PlayerUniqueID: pk.PlayerUniqueID,
+				Tick:           pk.Tick,
+			}
 		case *packet.CameraPresets:
 			presets := make([]proto.CameraPreset, len(pk.Presets))
 			for i, p := range pk.Presets {
@@ -691,6 +719,28 @@ func (p *Protocol) upgradePackets(pks []packet.Packet, conn *minecraft.Conn) []p
 		switch pk := pk.(type) {
 		case *packet.ClientCacheStatus:
 			pk.Enabled = false // TODO: enable when chunk translation is not broken
+		case *legacypacket.SetActorMotion:
+			pks[pkIndex] = &packet.SetActorMotion{
+				EntityRuntimeID: pk.EntityRuntimeID,
+				Velocity:        pk.Velocity,
+				Tick:            pk.Tick,
+			}
+		case *legacypacket.ResourcePackStack:
+			pks[pkIndex] = &packet.ResourcePackStack{
+				TexturePackRequired:          pk.TexturePackRequired,
+				BehaviourPacks:               pk.BehaviourPacks,
+				TexturePacks:                 pk.TexturePacks,
+				BaseGameVersion:              pk.BaseGameVersion,
+				Experiments:                  pk.Experiments,
+				ExperimentsPreviouslyToggled: pk.ExperimentsPreviouslyToggled,
+				IncludeEditorPacks:           pk.IncludeEditorPacks,
+			}
+		case *legacypacket.UpdatePlayerGameType:
+			pks[pkIndex] = &packet.UpdatePlayerGameType{
+				GameType:       pk.GameType,
+				PlayerUniqueID: pk.PlayerUniqueID,
+				Tick:           pk.Tick,
+			}
 		case *legacypacket.CameraPresets:
 			presets := make([]protocol.CameraPreset, len(pk.Presets))
 			for i, p := range pk.Presets {

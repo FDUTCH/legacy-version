@@ -47,7 +47,9 @@ func (*ResourcePacksInfo) ID() uint32 {
 
 func (pk *ResourcePacksInfo) Marshal(io protocol.IO) {
 	io.Bool(&pk.TexturePackRequired)
-	io.Bool(&pk.HasAddons)
+	if proto.IsProtoGTE(io, proto.ID662) {
+		io.Bool(&pk.HasAddons)
+	}
 	io.Bool(&pk.HasScripts)
 	if proto.IsProtoGTE(io, proto.ID766) {
 		io.UUID(&pk.WorldTemplateUUID)

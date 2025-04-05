@@ -12,6 +12,8 @@ const (
 	ID686 = 686 // v1.21.2
 	ID685 = 685 // v1.21.0
 	ID671 = 671 // v1.20.80
+	ID662 = 662 // v1.20.70
+	ID649 = 649 // v1.20.60
 )
 
 func IsProtoGTE(io protocol.IO, proto int32) bool {

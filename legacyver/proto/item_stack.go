@@ -808,9 +808,13 @@ func (a *CraftRecipeStackRequestAction) FromLatest(y *protocol.CraftRecipeStackR
 }
 
 func (a *CraftRecipeStackRequestAction) ToLatest() *protocol.CraftRecipeStackRequestAction {
+	numberOfCrafts := a.NumberOfCrafts
+	if numberOfCrafts == 0 {
+		numberOfCrafts = 1
+	}
 	return &protocol.CraftRecipeStackRequestAction{
 		RecipeNetworkID: a.RecipeNetworkID,
-		NumberOfCrafts:  a.NumberOfCrafts,
+		NumberOfCrafts:  numberOfCrafts,
 	}
 }
 

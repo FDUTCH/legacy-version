@@ -1,0 +1,35 @@
+package legacyver
+
+import (
+	_ "embed"
+	"github.com/akmalfairuz/legacy-version/internal/chunk"
+	"github.com/akmalfairuz/legacy-version/legacyver/proto"
+	"github.com/akmalfairuz/legacy-version/mapping"
+)
+
+const (
+	// ItemVersion649 ...
+	ItemVersion649 = 161
+	// BlockVersion649 ...
+	BlockVersion649 int32 = (1 << 24) | (20 << 16) | (60 << 8)
+)
+
+var (
+	//go:embed data/required_item_list_649.json
+	requiredItemList649 []byte
+	//go:embed data/block_states_649.nbt
+	blockStateData649 []byte
+)
+
+// New649 ...
+func New649() *Protocol {
+	itemMapping := mapping.NewItemMapping(requiredItemList649, ItemVersion649)
+	blockMapping := mapping.NewBlockMapping(blockStateData649)
+
+	return &Protocol{
+		ver:             "1.20.60",
+		id:              proto.ID649,
+		blockTranslator: NewBlockTranslator(blockMapping, blockMappingLatest, chunk.NewNetworkPersistentEncoding(blockMapping, BlockVersion649), chunk.NewBlockPaletteEncoding(blockMapping, BlockVersion649), false),
+		itemTranslator:  NewItemTranslator(itemMapping, itemMappingLatest, blockMapping, blockMappingLatest),
+	}
+}

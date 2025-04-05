@@ -13,5 +13,7 @@ func All() []minecraft.Protocol {
 		New686(),
 		New685(),
 		New671(),
+		New662(),
+		New649(),
 	}
 }

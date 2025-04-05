@@ -103,7 +103,9 @@ func (pk *PlayerAuthInput) Marshal(io protocol.IO) {
 	}
 
 	if pk.InputData.Load(packet.InputFlagClientPredictedVehicle) {
-		io.Vec2(&pk.VehicleRotation)
+		if proto.IsProtoGTE(io, proto.ID662) {
+			io.Vec2(&pk.VehicleRotation)
+		}
 		io.Varint64(&pk.ClientPredictedVehicle)
 	}
 

@@ -44,9 +44,11 @@ func (pk *MobEffect) Marshal(io protocol.IO) {
 	io.Varint32(&pk.Amplifier)
 	io.Bool(&pk.Particles)
 	io.Varint32(&pk.Duration)
-	if proto.IsProtoGTE(io, proto.ID748) {
-		io.Varuint64(&pk.Tick)
-	} else {
-		io.Uint64(&pk.Tick)
+	if proto.IsProtoGTE(io, proto.ID662) {
+		if proto.IsProtoGTE(io, proto.ID748) {
+			io.Varuint64(&pk.Tick)
+		} else {
+			io.Uint64(&pk.Tick)
+		}
 	}
 }

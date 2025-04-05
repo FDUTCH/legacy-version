@@ -258,7 +258,9 @@ func (pk *StartGame) Marshal(io protocol.IO) {
 	io.Varint32(&pk.Dimension)
 	io.Varint32(&pk.Generator)
 	io.Varint32(&pk.WorldGameMode)
-	io.Bool(&pk.Hardcore)
+	if proto.IsProtoGTE(io, proto.ID671) {
+		io.Bool(&pk.Hardcore)
+	}
 	io.Varint32(&pk.Difficulty)
 	io.UBlockPos(&pk.WorldSpawn)
 	io.Bool(&pk.AchievementsDisabled)
