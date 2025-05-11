@@ -120,6 +120,10 @@ func convertPacketFunc(pid uint32, cur func() packet.Packet) func() packet.Packe
 		return func() packet.Packet { return &legacypacket.UpdatePlayerGameType{} }
 	case packet.IDSetActorMotion:
 		return func() packet.Packet { return &legacypacket.SetActorMotion{} }
+	case packet.IDBiomeDefinitionList:
+		return func() packet.Packet { return &legacypacket.BiomeDefinitionList{} }
+	case packet.IDPlayerList:
+		return func() packet.Packet { return &legacypacket.PlayerList{} }
 	default:
 		return cur
 	}
@@ -708,6 +712,20 @@ func (p *Protocol) downgradePackets(pks []packet.Packet, conn *minecraft.Conn) [
 				Elements:   pk.Elements,
 				Visibility: pk.Visibility,
 			}
+		case *packet.BiomeDefinitionList:
+			pks[pkIndex] = &legacypacket.BiomeDefinitionList{
+				BiomeDefinitions: pk.BiomeDefinitions,
+				StringList:       pk.StringList,
+			}
+		case *packet.PlayerList:
+			entries := make([]proto.PlayerListEntry, len(pk.Entries))
+			for i, e := range pk.Entries {
+				entries[i] = (&proto.PlayerListEntry{}).FromLatest(e)
+			}
+			pks[pkIndex] = &legacypacket.PlayerList{
+				ActionType: pk.ActionType,
+				Entries:    entries,
+			}
 		}
 	}
 
@@ -1212,6 +1230,20 @@ func (p *Protocol) upgradePackets(pks []packet.Packet, conn *minecraft.Conn) []p
 			pks[pkIndex] = &packet.SetHud{
 				Elements:   pk.Elements,
 				Visibility: pk.Visibility,
+			}
+		case *legacypacket.BiomeDefinitionList:
+			pks[pkIndex] = &packet.BiomeDefinitionList{
+				BiomeDefinitions: pk.BiomeDefinitions,
+				StringList:       pk.StringList,
+			}
+		case *legacypacket.PlayerList:
+			entries := make([]protocol.PlayerListEntry, len(pk.Entries))
+			for i, e := range pk.Entries {
+				entries[i] = e.ToLatest()
+			}
+			pks[pkIndex] = &packet.PlayerList{
+				ActionType: pk.ActionType,
+				Entries:    entries,
 			}
 		}
 	}

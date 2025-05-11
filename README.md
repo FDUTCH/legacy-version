@@ -5,6 +5,7 @@ A gophertunnel protocol interface implementation to support older Minecraft Bedr
 ## Supported Versions
 | Protocol ID | Version | Support |
 |-------------|---------|---------|
+| 800         | 1.21.80 | ✅       |
 | 786         | 1.21.70 | ✅       |
 | 776         | 1.21.60 | ✅       |
 | 766         | 1.21.50 | ✅       |
@@ -16,11 +17,10 @@ A gophertunnel protocol interface implementation to support older Minecraft Bedr
 | 671         | 1.20.80 | ✅       |
 | 662         | 1.20.70 | ✅       |
 | 649         | 1.20.60 | ✅       |
-| 630         | 1.20.50 | 🚧      |
-| 622         | 1.20.40 | 🚧      |
-| 618         | 1.20.30 | 🚧      |
-| 594         | 1.20.10 | 🚧      |
-| 589         | 1.20.0  | 🚧      |
+
+<= 1.20.50 is not possible to support due to different compression logic and gophertunnel does not provide a way to
+support dynamic compression.
+
 
 ## Credits
 - [Flonja/multiversion](https://github.com/Flonja/multiversion)

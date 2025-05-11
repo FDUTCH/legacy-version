@@ -5,6 +5,7 @@ import "github.com/sandertv/gophertunnel/minecraft"
 // All returns a slice of all legacy protocol versions that are supported.
 func All() []minecraft.Protocol {
 	return []minecraft.Protocol{
+		New786(),
 		New776(),
 		New766(),
 		New748(),

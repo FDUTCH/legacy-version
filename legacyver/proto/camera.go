@@ -55,6 +55,18 @@ type CameraPreset struct {
 	AlignTargetAndCameraForward protocol.Optional[bool]
 	// AimAssist defines the aim assist to use when using this preset.
 	AimAssist protocol.Optional[protocol.CameraPresetAimAssist]
+	// ControlScheme is the control scheme that the client should use in this camera. It is one of the following:
+	//  - ControlSchemeLockedPlayerRelativeStrafe is the default behaviour, this cannot be set when the client
+	//    is in a custom camera.
+	//  - ControlSchemeCameraRelative makes movement relative to the camera's transform, with the client's
+	//    rotation being relative to the client's movement.
+	//  - ControlSchemeCameraRelativeStrafe makes movement relative to the camera's transform, with the
+	//    client's rotation being locked.
+	//  - ControlSchemePlayerRelative makes movement relative to the player's transform, meaning holding
+	//    left/right will make the player turn in a circle.
+	//  - ControlSchemePlayerRelativeStrafe makes movement the same as the default behaviour, but can be
+	//    used in a custom camera.
+	ControlScheme protocol.Optional[byte]
 }
 
 func (x *CameraPreset) FromLatest(cp protocol.CameraPreset) CameraPreset {
@@ -78,6 +90,7 @@ func (x *CameraPreset) FromLatest(cp protocol.CameraPreset) CameraPreset {
 	x.PlayerEffects = cp.PlayerEffects
 	x.AlignTargetAndCameraForward = cp.AlignTargetAndCameraForward
 	x.AimAssist = cp.AimAssist
+	x.ControlScheme = cp.ControlScheme
 	return *x
 }
 
@@ -105,6 +118,7 @@ func (x *CameraPreset) ToLatest() protocol.CameraPreset {
 		PlayerEffects:               x.PlayerEffects,
 		AlignTargetAndCameraForward: x.AlignTargetAndCameraForward,
 		AimAssist:                   x.AimAssist,
+		ControlScheme:               x.ControlScheme,
 	}
 }
 
@@ -145,5 +159,8 @@ func (x *CameraPreset) Marshal(r protocol.IO) {
 	}
 	if IsProtoGTE(r, ID766) {
 		protocol.OptionalMarshaler(r, &x.AimAssist)
+	}
+	if IsProtoGTE(r, ID800) {
+		protocol.OptionalFunc(r, &x.ControlScheme, r.Uint8)
 	}
 }
