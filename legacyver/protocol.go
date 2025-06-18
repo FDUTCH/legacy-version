@@ -256,13 +256,14 @@ func (p *Protocol) downgradePackets(pks []packet.Packet, conn *minecraft.Conn) [
 				}
 			}
 			pks[pkIndex] = &legacypacket.ResourcePacksInfo{
-				TexturePackRequired:  pk.TexturePackRequired,
-				HasAddons:            pk.HasAddons,
-				HasScripts:           pk.HasScripts,
-				WorldTemplateUUID:    pk.WorldTemplateUUID,
-				WorldTemplateVersion: pk.WorldTemplateVersion,
-				TexturePacks:         texturePacks,
-				PackURLs:             packURLs,
+				TexturePackRequired:        pk.TexturePackRequired,
+				HasAddons:                  pk.HasAddons,
+				HasScripts:                 pk.HasScripts,
+				ForceDisableVibrantVisuals: pk.ForceDisableVibrantVisuals,
+				WorldTemplateUUID:          pk.WorldTemplateUUID,
+				WorldTemplateVersion:       pk.WorldTemplateVersion,
+				TexturePacks:               texturePacks,
+				PackURLs:                   packURLs,
 			}
 		case *packet.InventorySlot:
 			pks[pkIndex] = &legacypacket.InventorySlot{
@@ -587,6 +588,7 @@ func (p *Protocol) downgradePackets(pks []packet.Packet, conn *minecraft.Conn) [
 				ServerID:                       pk.ServerID,
 				WorldID:                        pk.WorldID,
 				ScenarioID:                     pk.ScenarioID,
+				OwnerID:                        pk.OwnerID,
 				UseBlockNetworkIDHashes:        pk.UseBlockNetworkIDHashes,
 				ServerAuthoritativeSound:       pk.ServerAuthoritativeSound,
 			}
@@ -827,12 +829,13 @@ func (p *Protocol) upgradePackets(pks []packet.Packet, conn *minecraft.Conn) []p
 				}
 			}
 			pks[pkIndex] = &packet.ResourcePacksInfo{
-				TexturePackRequired:  pk.TexturePackRequired,
-				HasAddons:            pk.HasAddons,
-				HasScripts:           pk.HasScripts,
-				WorldTemplateUUID:    pk.WorldTemplateUUID,
-				WorldTemplateVersion: pk.WorldTemplateVersion,
-				TexturePacks:         texturePacks,
+				TexturePackRequired:        pk.TexturePackRequired,
+				HasAddons:                  pk.HasAddons,
+				HasScripts:                 pk.HasScripts,
+				ForceDisableVibrantVisuals: pk.ForceDisableVibrantVisuals,
+				WorldTemplateUUID:          pk.WorldTemplateUUID,
+				WorldTemplateVersion:       pk.WorldTemplateVersion,
+				TexturePacks:               texturePacks,
 			}
 		case *legacypacket.InventorySlot:
 			pks[pkIndex] = &packet.InventorySlot{
@@ -1143,6 +1146,7 @@ func (p *Protocol) upgradePackets(pks []packet.Packet, conn *minecraft.Conn) []p
 				ServerID:                       pk.ServerID,
 				WorldID:                        pk.WorldID,
 				ScenarioID:                     pk.ScenarioID,
+				OwnerID:                        pk.OwnerID,
 				UseBlockNetworkIDHashes:        pk.UseBlockNetworkIDHashes,
 				ServerAuthoritativeSound:       pk.ServerAuthoritativeSound,
 			}
