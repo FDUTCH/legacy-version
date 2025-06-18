@@ -1,10 +1,13 @@
 package legacyver
 
-import "github.com/sandertv/gophertunnel/minecraft"
+import (
+	"github.com/sandertv/gophertunnel/minecraft"
+)
 
 // All returns a slice of all legacy protocol versions that are supported.
 func All() []minecraft.Protocol {
 	return []minecraft.Protocol{
+		New800(),
 		New786(),
 		New776(),
 		New766(),

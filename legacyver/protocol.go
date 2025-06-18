@@ -124,6 +124,8 @@ func convertPacketFunc(pid uint32, cur func() packet.Packet) func() packet.Packe
 		return func() packet.Packet { return &legacypacket.BiomeDefinitionList{} }
 	case packet.IDPlayerList:
 		return func() packet.Packet { return &legacypacket.PlayerList{} }
+	case packet.IDSubChunk:
+		return func() packet.Packet { return &legacypacket.SubChunk{} }
 	default:
 		return cur
 	}
@@ -726,6 +728,17 @@ func (p *Protocol) downgradePackets(pks []packet.Packet, conn *minecraft.Conn) [
 				ActionType: pk.ActionType,
 				Entries:    entries,
 			}
+		case *packet.SubChunk:
+			entries := make([]proto.SubChunkEntry, len(pk.SubChunkEntries))
+			for i, e := range pk.SubChunkEntries {
+				entries[i] = (&proto.SubChunkEntry{}).FromLatest(e)
+			}
+			pks[pkIndex] = &legacypacket.SubChunk{
+				CacheEnabled:    pk.CacheEnabled,
+				Dimension:       pk.Dimension,
+				Position:        pk.Position,
+				SubChunkEntries: entries,
+			}
 		}
 	}
 
@@ -1203,7 +1216,7 @@ func (p *Protocol) upgradePackets(pks []packet.Packet, conn *minecraft.Conn) []p
 			pks[pkIndex] = &packet.UpdateAbilities{AbilityData: pk.AbilityData.ToLatest()}
 		case *legacypacket.ClientMovementPredictionSync:
 			pks[pkIndex] = &packet.ClientMovementPredictionSync{
-				ActorFlags:              fitBitset(pk.ActorFlags, packet.ClientMovementPredictionSyncBitsetSize),
+				ActorFlags:              fitBitset(pk.ActorFlags, protocol.EntityDataFlagCount),
 				BoundingBoxScale:        pk.BoundingBoxScale,
 				BoundingBoxWidth:        pk.BoundingBoxWidth,
 				BoundingBoxHeight:       pk.BoundingBoxHeight,
@@ -1244,6 +1257,17 @@ func (p *Protocol) upgradePackets(pks []packet.Packet, conn *minecraft.Conn) []p
 			pks[pkIndex] = &packet.PlayerList{
 				ActionType: pk.ActionType,
 				Entries:    entries,
+			}
+		case *legacypacket.SubChunk:
+			entries := make([]protocol.SubChunkEntry, len(pk.SubChunkEntries))
+			for i, e := range pk.SubChunkEntries {
+				entries[i] = e.ToLatest()
+			}
+			pks[pkIndex] = &packet.SubChunk{
+				CacheEnabled:    pk.CacheEnabled,
+				Dimension:       pk.Dimension,
+				Position:        pk.Position,
+				SubChunkEntries: entries,
 			}
 		}
 	}

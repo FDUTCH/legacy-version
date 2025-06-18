@@ -20,6 +20,9 @@ type ResourcePacksInfo struct {
 	// HasScripts specifies if any of the resource packs contain scripts in them. If set to true, only clients
 	// that support scripts will be able to download them.
 	HasScripts bool
+	// ForceDisableVibrantVisuals specifies if the vibrant visuals feature should be forcibly disabled on the server.Add commentMore actions
+	// If set to true, the server will ensure that vibrant visuals are not enabled, regardless of the client's settings.
+	ForceDisableVibrantVisuals bool
 	// WorldTemplateUUID is the UUID of the template that has been used to generate the world. Templates can
 	// be downloaded from the marketplace or installed via '.mctemplate' files. If the world was not generated
 	// from a template, this field is empty.
@@ -52,6 +55,9 @@ func (pk *ResourcePacksInfo) Marshal(io protocol.IO) {
 	}
 	io.Bool(&pk.HasScripts)
 	if proto.IsProtoGTE(io, proto.ID766) {
+		if proto.IsProtoGTE(io, proto.ID818) {
+			io.Bool(&pk.ForceDisableVibrantVisuals)
+		}
 		io.UUID(&pk.WorldTemplateUUID)
 		io.String(&pk.WorldTemplateVersion)
 	}
