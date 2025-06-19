@@ -382,8 +382,12 @@ func (p *Protocol) downgradePackets(pks []packet.Packet, conn *minecraft.Conn) [
 				EntityLink: (&proto.EntityLink{}).FromLatest(pk.EntityLink),
 			}
 		case *packet.CameraInstruction:
+			var iSet protocol.Optional[proto.CameraInstructionSet]
+			if v, ok := pk.Set.Value(); ok {
+				iSet = protocol.Option((&proto.CameraInstructionSet{}).FromLatest(v))
+			}
 			pks[pkIndex] = &legacypacket.CameraInstruction{
-				Set:          pk.Set,
+				Set:          iSet,
 				Clear:        pk.Clear,
 				Fade:         pk.Fade,
 				Target:       pk.Target,
@@ -952,8 +956,12 @@ func (p *Protocol) upgradePackets(pks []packet.Packet, conn *minecraft.Conn) []p
 				EntityLink: pk.EntityLink.ToLatest(),
 			}
 		case *legacypacket.CameraInstruction:
+			var iSet protocol.Optional[protocol.CameraInstructionSet]
+			if v, ok := pk.Set.Value(); ok {
+				iSet = protocol.Option(v.ToLatest())
+			}
 			pks[pkIndex] = &packet.CameraInstruction{
-				Set:          pk.Set,
+				Set:          iSet,
 				Clear:        pk.Clear,
 				Fade:         pk.Fade,
 				Target:       pk.Target,

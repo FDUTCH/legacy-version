@@ -88,7 +88,6 @@ func (x *CameraPreset) FromLatest(cp protocol.CameraPreset) CameraPreset {
 	x.Radius = cp.Radius
 	x.AudioListener = cp.AudioListener
 	x.PlayerEffects = cp.PlayerEffects
-	x.AlignTargetAndCameraForward = cp.AlignTargetAndCameraForward
 	x.AimAssist = cp.AimAssist
 	x.ControlScheme = cp.ControlScheme
 	return *x
@@ -96,29 +95,28 @@ func (x *CameraPreset) FromLatest(cp protocol.CameraPreset) CameraPreset {
 
 func (x *CameraPreset) ToLatest() protocol.CameraPreset {
 	return protocol.CameraPreset{
-		Name:                        x.Name,
-		Parent:                      x.Parent,
-		PosX:                        x.PosX,
-		PosY:                        x.PosY,
-		PosZ:                        x.PosZ,
-		RotX:                        x.RotX,
-		RotY:                        x.RotY,
-		RotationSpeed:               x.RotationSpeed,
-		SnapToTarget:                x.SnapToTarget,
-		HorizontalRotationLimit:     x.HorizontalRotationLimit,
-		VerticalRotationLimit:       x.VerticalRotationLimit,
-		ContinueTargeting:           x.ContinueTargeting,
-		TrackingRadius:              x.TrackingRadius,
-		ViewOffset:                  x.ViewOffset,
-		EntityOffset:                x.EntityOffset,
-		Radius:                      x.Radius,
-		MinYawLimit:                 x.MinYawLimit,
-		MaxYawLimit:                 x.MaxYawLimit,
-		AudioListener:               x.AudioListener,
-		PlayerEffects:               x.PlayerEffects,
-		AlignTargetAndCameraForward: x.AlignTargetAndCameraForward,
-		AimAssist:                   x.AimAssist,
-		ControlScheme:               x.ControlScheme,
+		Name:                    x.Name,
+		Parent:                  x.Parent,
+		PosX:                    x.PosX,
+		PosY:                    x.PosY,
+		PosZ:                    x.PosZ,
+		RotX:                    x.RotX,
+		RotY:                    x.RotY,
+		RotationSpeed:           x.RotationSpeed,
+		SnapToTarget:            x.SnapToTarget,
+		HorizontalRotationLimit: x.HorizontalRotationLimit,
+		VerticalRotationLimit:   x.VerticalRotationLimit,
+		ContinueTargeting:       x.ContinueTargeting,
+		TrackingRadius:          x.TrackingRadius,
+		ViewOffset:              x.ViewOffset,
+		EntityOffset:            x.EntityOffset,
+		Radius:                  x.Radius,
+		MinYawLimit:             x.MinYawLimit,
+		MaxYawLimit:             x.MaxYawLimit,
+		AudioListener:           x.AudioListener,
+		PlayerEffects:           x.PlayerEffects,
+		AimAssist:               x.AimAssist,
+		ControlScheme:           x.ControlScheme,
 	}
 }
 
@@ -154,7 +152,7 @@ func (x *CameraPreset) Marshal(r protocol.IO) {
 	protocol.OptionalFunc(r, &x.Radius, r.Float32)
 	protocol.OptionalFunc(r, &x.AudioListener, r.Uint8)
 	protocol.OptionalFunc(r, &x.PlayerEffects, r.Bool)
-	if IsProtoGTE(r, ID748) {
+	if IsProtoGTE(r, ID748) && IsProtoLT(r, ID818) {
 		protocol.OptionalFunc(r, &x.AlignTargetAndCameraForward, r.Bool)
 	}
 	if IsProtoGTE(r, ID766) {
@@ -162,5 +160,71 @@ func (x *CameraPreset) Marshal(r protocol.IO) {
 	}
 	if IsProtoGTE(r, ID800) {
 		protocol.OptionalFunc(r, &x.ControlScheme, r.Uint8)
+	}
+}
+
+// CameraInstructionSet represents a camera instruction that sets the camera to a specified preset and can be extended
+// with easing functions and translations to the camera's position and rotation.
+type CameraInstructionSet struct {
+	// Preset is the index of the preset in the CameraPresets packet sent to the player.
+	Preset uint32
+	// Ease represents the easing function that is used by the instruction.
+	Ease protocol.Optional[protocol.CameraEase]
+	// Position represents the position of the camera.
+	Position protocol.Optional[mgl32.Vec3]
+	// Rotation represents the rotation of the camera.
+	Rotation protocol.Optional[mgl32.Vec2]
+	// Facing is a vector that the camera will always face towards during the duration of the instruction.
+	Facing protocol.Optional[mgl32.Vec3]
+	// ViewOffset is an offset based on a pivot point to the player, causing the camera to be shifted in a
+	// certain direction.
+	ViewOffset protocol.Optional[mgl32.Vec2]
+	// EntityOffset is an offset from the entity that the camera should be rendered at.
+	EntityOffset protocol.Optional[mgl32.Vec3]
+	// Default determines whether the camera is a default camera or not.
+	Default protocol.Optional[bool]
+	// IgnoreStartingValuesComponent behavior is currently unknown.
+	IgnoreStartingValuesComponent bool
+}
+
+func (x *CameraInstructionSet) FromLatest(cis protocol.CameraInstructionSet) CameraInstructionSet {
+	x.Preset = cis.Preset
+	x.Ease = cis.Ease
+	x.Position = cis.Position
+	x.Rotation = cis.Rotation
+	x.Facing = cis.Facing
+	x.ViewOffset = cis.ViewOffset
+	x.EntityOffset = cis.EntityOffset
+	x.Default = cis.Default
+	x.IgnoreStartingValuesComponent = cis.IgnoreStartingValuesComponent
+	return *x
+}
+
+func (x *CameraInstructionSet) ToLatest() protocol.CameraInstructionSet {
+	return protocol.CameraInstructionSet{
+		Preset:                        x.Preset,
+		Ease:                          x.Ease,
+		Position:                      x.Position,
+		Rotation:                      x.Rotation,
+		Facing:                        x.Facing,
+		ViewOffset:                    x.ViewOffset,
+		EntityOffset:                  x.EntityOffset,
+		Default:                       x.Default,
+		IgnoreStartingValuesComponent: x.IgnoreStartingValuesComponent,
+	}
+}
+
+// Marshal encodes/decodes a CameraInstructionSet.
+func (x *CameraInstructionSet) Marshal(r protocol.IO) {
+	r.Uint32(&x.Preset)
+	protocol.OptionalMarshaler(r, &x.Ease)
+	protocol.OptionalFunc(r, &x.Position, r.Vec3)
+	protocol.OptionalFunc(r, &x.Rotation, r.Vec2)
+	protocol.OptionalFunc(r, &x.Facing, r.Vec3)
+	protocol.OptionalFunc(r, &x.ViewOffset, r.Vec2)
+	protocol.OptionalFunc(r, &x.EntityOffset, r.Vec3)
+	protocol.OptionalFunc(r, &x.Default, r.Bool)
+	if IsProtoGTE(r, ID818) {
+		r.Bool(&x.IgnoreStartingValuesComponent)
 	}
 }
