@@ -189,7 +189,7 @@ type StartGame struct {
 	// on the world.
 	Trial bool
 	// PlayerMovementSettings ...
-	PlayerMovementSettings protocol.PlayerMovementSettings
+	PlayerMovementSettings proto.PlayerMovementSettings
 	// Time is the total time that has elapsed since the start of the world.
 	Time int64
 	// EnchantmentSeed is the seed used to seed the random used to produce enchantments in the enchantment
@@ -319,7 +319,7 @@ func (pk *StartGame) Marshal(io protocol.IO) {
 	io.String(&pk.WorldName)
 	io.String(&pk.TemplateContentIdentity)
 	io.Bool(&pk.Trial)
-	protocol.PlayerMoveSettings(io, &pk.PlayerMovementSettings)
+	proto.PlayerMoveSettings(io, &pk.PlayerMovementSettings)
 	io.Int64(&pk.Time)
 	io.Varint32(&pk.EnchantmentSeed)
 	protocol.Slice(io, &pk.Blocks)

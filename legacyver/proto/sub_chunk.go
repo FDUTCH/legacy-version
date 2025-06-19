@@ -15,14 +15,12 @@ type SubChunkEntry struct {
 	HeightMapType byte
 	// HeightMapData is the data for the height map.
 	HeightMapData []int8
-	// BlobHash is the hash of the blob.
-	BlobHash uint64
 	// RenderHeightMapType is always one of the constants defined in the HeightMapData constants.
 	RenderHeightMapType byte
 	// RenderHeightMapData is the data for the render height map.
 	RenderHeightMapData []int8
-	// RenderBlobHash is the hash of the render blob.
-	RenderBlobHash uint64
+	// BlobHash is the hash of the blob.
+	BlobHash uint64
 }
 
 // ToLatest ...
@@ -33,10 +31,9 @@ func (x *SubChunkEntry) ToLatest() protocol.SubChunkEntry {
 		RawPayload:          x.RawPayload,
 		HeightMapType:       x.HeightMapType,
 		HeightMapData:       x.HeightMapData,
-		BlobHash:            x.BlobHash,
 		RenderHeightMapType: x.RenderHeightMapType,
 		RenderHeightMapData: x.RenderHeightMapData,
-		RenderBlobHash:      x.RenderBlobHash,
+		BlobHash:            x.BlobHash,
 	}
 }
 
@@ -47,10 +44,9 @@ func (x *SubChunkEntry) FromLatest(y protocol.SubChunkEntry) SubChunkEntry {
 	x.RawPayload = y.RawPayload
 	x.HeightMapType = y.HeightMapType
 	x.HeightMapData = y.HeightMapData
-	x.BlobHash = y.BlobHash
 	x.RenderHeightMapType = y.RenderHeightMapType
 	x.RenderHeightMapData = y.RenderHeightMapData
-	x.RenderBlobHash = y.RenderBlobHash
+	x.BlobHash = y.BlobHash
 	return *x
 }
 
@@ -65,14 +61,13 @@ func (x *SubChunkEntry) Marshal(r protocol.IO) {
 	if x.HeightMapType == protocol.HeightMapDataHasData {
 		protocol.FuncSliceOfLen(r, 256, &x.HeightMapData, r.Int8)
 	}
-	r.Uint64(&x.BlobHash)
 	if IsProtoGTE(r, ID818) {
 		r.Uint8(&x.RenderHeightMapType)
 		if x.RenderHeightMapType == protocol.HeightMapDataHasData {
 			protocol.FuncSliceOfLen(r, 256, &x.RenderHeightMapData, r.Int8)
 		}
-		r.Uint64(&x.RenderBlobHash)
 	}
+	r.Uint64(&x.BlobHash)
 }
 
 // SubChunkEntryNoCache encodes/decodes a SubChunkEntry assuming the blob cache is not enabled.

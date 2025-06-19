@@ -95,3 +95,41 @@ func (x *PlayerListEntry) ToLatest() protocol.PlayerListEntry {
 func PlayerListRemoveEntry(r protocol.IO, x *PlayerListEntry) {
 	r.UUID(&x.UUID)
 }
+
+// PlayerMovementSettings represents the different server authoritative movement settings. These control how
+// the client will provide input to the server.
+type PlayerMovementSettings struct {
+	// MovementType ...
+	MovementType int32
+	// RewindHistorySize is the amount of history to keep at maximum.
+	RewindHistorySize int32
+	// ServerAuthoritativeBlockBreaking specifies if block breaking should be sent through
+	// packet.PlayerAuthInput or not.
+	ServerAuthoritativeBlockBreaking bool
+}
+
+func (p *PlayerMovementSettings) FromLatest(x protocol.PlayerMovementSettings) PlayerMovementSettings {
+	p.MovementType = 1
+	if p.RewindHistorySize > 0 {
+		p.MovementType = 2
+	}
+	p.RewindHistorySize = x.RewindHistorySize
+	p.ServerAuthoritativeBlockBreaking = x.ServerAuthoritativeBlockBreaking
+	return *p
+}
+
+func (p *PlayerMovementSettings) ToLatest() protocol.PlayerMovementSettings {
+	return protocol.PlayerMovementSettings{
+		RewindHistorySize:                p.RewindHistorySize,
+		ServerAuthoritativeBlockBreaking: p.ServerAuthoritativeBlockBreaking,
+	}
+}
+
+// PlayerMoveSettings reads/writes PlayerMovementSettings x to/from IO r.
+func PlayerMoveSettings(r protocol.IO, x *PlayerMovementSettings) {
+	if IsProtoLT(r, ID818) {
+		r.Varint32(&x.MovementType)
+	}
+	r.Varint32(&x.RewindHistorySize)
+	r.Bool(&x.ServerAuthoritativeBlockBreaking)
+}
