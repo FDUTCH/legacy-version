@@ -76,10 +76,10 @@ func SubChunkEntryNoCache(r protocol.IO, x *SubChunkEntry) {
 	r.Uint8(&x.Result)
 	r.ByteSlice(&x.RawPayload)
 	r.Uint8(&x.HeightMapType)
+	if x.HeightMapType == protocol.HeightMapDataHasData {
+		protocol.FuncSliceOfLen(r, 256, &x.HeightMapData, r.Int8)
+	}
 	if IsProtoGTE(r, ID818) {
-		if x.HeightMapType == protocol.HeightMapDataHasData {
-			protocol.FuncSliceOfLen(r, 256, &x.HeightMapData, r.Int8)
-		}
 		r.Uint8(&x.RenderHeightMapType)
 		if x.RenderHeightMapType == protocol.HeightMapDataHasData {
 			protocol.FuncSliceOfLen(r, 256, &x.RenderHeightMapData, r.Int8)
