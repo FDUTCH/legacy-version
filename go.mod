@@ -12,7 +12,7 @@ require (
 	github.com/pelletier/go-toml v1.9.5
 	github.com/rogpeppe/go-internal v1.14.1
 	github.com/samber/lo v1.49.1
-	github.com/sandertv/gophertunnel v1.47.3
+	github.com/sandertv/gophertunnel v1.47.4
 	github.com/segmentio/fasthash v1.0.3
 	golang.org/x/exp v0.0.0-20250305212735-054e65f0b394
 	golang.org/x/image v0.25.0

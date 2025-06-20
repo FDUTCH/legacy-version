@@ -3,6 +3,7 @@ package proto
 import (
 	"github.com/google/uuid"
 	"github.com/sandertv/gophertunnel/minecraft/protocol"
+	"image/color"
 )
 
 // PlayerListEntry is an entry found in the PlayerList packet. It represents a single player using the UUID
@@ -38,7 +39,7 @@ type PlayerListEntry struct {
 	SubClient bool
 	// PlayerColour is the colour of the player that is shown in UI elements, currently only used for the
 	// player locator bar.
-	PlayerColour int32
+	PlayerColour color.RGBA
 }
 
 // Marshal encodes/decodes a PlayerListEntry.
@@ -54,7 +55,7 @@ func (x *PlayerListEntry) Marshal(r protocol.IO) {
 	r.Bool(&x.Host)
 	r.Bool(&x.SubClient)
 	if IsProtoGTE(r, ID800) {
-		r.Int32(&x.PlayerColour)
+		r.ARGB(&x.PlayerColour)
 	}
 }
 
