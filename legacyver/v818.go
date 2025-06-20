@@ -25,7 +25,7 @@ var (
 
 func itemMappingLatest(deleteDebugStick bool) mapping.Item {
 	if deleteDebugStick {
-		return itemMappingLatestWithDebugStick
+		return itemMappingLatestWithoutDebugStick
 	}
-	return itemMappingLatestWithoutDebugStick
+	return itemMappingLatestWithDebugStick
 }
