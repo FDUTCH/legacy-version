@@ -22,14 +22,14 @@ var (
 )
 
 // New649 ...
-func New649() *Protocol {
-	itemMapping := mapping.NewItemMapping(requiredItemList649, ItemVersion649)
+func New649(deleteDebugStick bool) *Protocol {
+	itemMapping := mapping.NewItemMapping(requiredItemList649, ItemVersion649, deleteDebugStick)
 	blockMapping := mapping.NewBlockMapping(blockStateData649)
 
 	return &Protocol{
 		ver:             "1.20.60",
 		id:              proto.ID649,
 		blockTranslator: NewBlockTranslator(blockMapping, blockMappingLatest, chunk.NewNetworkPersistentEncoding(blockMapping, BlockVersion649), chunk.NewBlockPaletteEncoding(blockMapping, BlockVersion649), false),
-		itemTranslator:  NewItemTranslator(itemMapping, itemMappingLatest, blockMapping, blockMappingLatest),
+		itemTranslator:  NewItemTranslator(itemMapping, itemMappingLatest(deleteDebugStick), blockMapping, blockMappingLatest),
 	}
 }

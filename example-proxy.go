@@ -28,7 +28,7 @@ func main() {
 	}
 	listener, err := minecraft.ListenConfig{
 		StatusProvider:    p,
-		AcceptedProtocols: legacyver.All(),
+		AcceptedProtocols: legacyver.All(false),
 	}.Listen("raknet", config.Connection.LocalAddress)
 	if err != nil {
 		panic(err)

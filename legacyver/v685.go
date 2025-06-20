@@ -15,14 +15,14 @@ const (
 )
 
 // New685 uses same data as 686
-func New685() *Protocol {
-	itemMapping := mapping.NewItemMapping(requiredItemList686, ItemVersion685)
+func New685(deleteDebugStick bool) *Protocol {
+	itemMapping := mapping.NewItemMapping(requiredItemList686, ItemVersion685, deleteDebugStick)
 	blockMapping := mapping.NewBlockMapping(blockStateData686)
 
 	return &Protocol{
 		ver:             "1.21.0",
 		id:              proto.ID685,
 		blockTranslator: NewBlockTranslator(blockMapping, blockMappingLatest, chunk.NewNetworkPersistentEncoding(blockMapping, BlockVersion685), chunk.NewBlockPaletteEncoding(blockMapping, BlockVersion685), false),
-		itemTranslator:  NewItemTranslator(itemMapping, itemMappingLatest, blockMapping, blockMappingLatest),
+		itemTranslator:  NewItemTranslator(itemMapping, itemMappingLatest(deleteDebugStick), blockMapping, blockMappingLatest),
 	}
 }

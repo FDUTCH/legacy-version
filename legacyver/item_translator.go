@@ -57,6 +57,7 @@ type DefaultItemTranslator struct {
 	ridToCustomItem    map[int32]world.CustomItem
 	originalToCustom   map[int32]int32
 	customToOriginal   map[int32]int32
+	hasDebugStick      bool
 }
 
 func NewItemTranslator(mapping mapping.Item, latestMapping mapping.Item, blockMapping mapping.Block, blockMappingLatest mapping.Block) *DefaultItemTranslator {

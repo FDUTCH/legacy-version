@@ -19,16 +19,15 @@ var (
 	requiredItemList800 []byte
 	//go:embed data/block_states_800.nbt
 	blockStateData800 []byte
-
-	itemMapping800  = mapping.NewItemMapping(requiredItemList800, ItemVersion800)
-	blockMapping800 = mapping.NewBlockMapping(blockStateData800)
 )
 
-func New800() *Protocol {
+func New800(deleteDebugStick bool) *Protocol {
+	itemMapping := mapping.NewItemMapping(requiredItemList800, ItemVersion800, deleteDebugStick)
+	blockMapping := mapping.NewBlockMapping(blockStateData800)
 	return &Protocol{
 		ver:             "1.21.80",
 		id:              proto.ID800,
-		blockTranslator: NewBlockTranslator(blockMapping800, blockMappingLatest, chunk.NewNetworkPersistentEncoding(blockMapping800, BlockVersion800), chunk.NewBlockPaletteEncoding(blockMapping800, BlockVersion800), false),
-		itemTranslator:  NewItemTranslator(itemMapping800, itemMappingLatest, blockMapping800, blockMappingLatest),
+		blockTranslator: NewBlockTranslator(blockMapping, blockMappingLatest, chunk.NewNetworkPersistentEncoding(blockMapping, BlockVersion800), chunk.NewBlockPaletteEncoding(blockMapping, BlockVersion800), false),
+		itemTranslator:  NewItemTranslator(itemMapping, itemMappingLatest(deleteDebugStick), blockMapping, blockMappingLatest),
 	}
 }

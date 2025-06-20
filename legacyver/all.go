@@ -4,20 +4,22 @@ import (
 	"github.com/sandertv/gophertunnel/minecraft"
 )
 
-// All returns a slice of all legacy protocol versions that are supported.
-func All() []minecraft.Protocol {
+// All returns a slice of all legacy protocol versions that are supported. deleteDebugStick
+// must be set to true if you're using Dragonfly. deleteDebugStick must be set to false if you're using
+// PocketMine, Nukkit, or other server software that includes the debug stick in the item registry.
+func All(deleteDebugStick bool) []minecraft.Protocol {
 	return []minecraft.Protocol{
-		New800(),
-		New786(),
-		New776(),
-		New766(),
-		New748(),
-		New729(),
-		New712(),
-		New686(),
-		New685(),
-		New671(),
-		New662(),
-		New649(),
+		New800(deleteDebugStick),
+		New786(deleteDebugStick),
+		New776(deleteDebugStick),
+		New766(deleteDebugStick),
+		New748(deleteDebugStick),
+		New729(deleteDebugStick),
+		New712(deleteDebugStick),
+		New686(deleteDebugStick),
+		New685(deleteDebugStick),
+		New671(deleteDebugStick),
+		New662(deleteDebugStick),
+		New649(deleteDebugStick),
 	}
 }

@@ -43,17 +43,19 @@ type DefaultItemMapping struct {
 	itemRuntimeIDToData map[int32]map[string]any
 	// itemEntries holds a map to translate item string IDs to runtime IDs.
 	itemEntries []ItemEntry
+
 	airRID      int32
 	itemVersion uint16
 }
 
-func NewItemMapping(requiredItemList []byte, itemVersion uint16) *DefaultItemMapping {
+func NewItemMapping(requiredItemList []byte, itemVersion uint16, deleteDebugStick bool) *DefaultItemMapping {
 	itemRuntimeIDsToNames := make(map[int32]string)
 	itemNamesToRuntimeIDs := make(map[string]int32)
 	itemRuntimeIDToVersion := make(map[int32]uint8)
 	itemRuntimeIDToData := make(map[int32]map[string]any)
 	itemEntries := make([]ItemEntry, 0, 1600)
 	var airRID *int32
+	var debugStickRID *int32
 
 	var m map[string]struct {
 		RuntimeID      int16  `json:"runtime_id"`
@@ -64,6 +66,22 @@ func NewItemMapping(requiredItemList []byte, itemVersion uint16) *DefaultItemMap
 	if err := json.Unmarshal(requiredItemList, &m); err != nil {
 		panic(err)
 	}
+
+	if v, ok := m["minecraft:debug_stick"]; ok {
+		rid := int32(v.RuntimeID)
+		debugStickRID = &rid
+	}
+
+	if deleteDebugStick && debugStickRID != nil {
+		delete(m, "minecraft:debug_stick")
+		for name, data := range m {
+			if int32(data.RuntimeID) > *debugStickRID {
+				data.RuntimeID-- // Shift all runtime IDs down by 1
+			}
+			m[name] = data
+		}
+	}
+
 	for name, data := range m {
 		rid := int32(data.RuntimeID)
 		if name == "minecraft:air" {

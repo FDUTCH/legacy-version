@@ -18,6 +18,14 @@ var (
 	//go:embed data/block_states_818.nbt
 	blockStateData818 []byte
 
-	itemMappingLatest  = mapping.NewItemMapping(requiredItemList818, ItemVersion818)
-	blockMappingLatest = mapping.NewBlockMapping(blockStateData818)
+	itemMappingLatestWithDebugStick    = mapping.NewItemMapping(requiredItemList818, ItemVersion818, false)
+	itemMappingLatestWithoutDebugStick = mapping.NewItemMapping(requiredItemList818, ItemVersion818, true)
+	blockMappingLatest                 = mapping.NewBlockMapping(blockStateData818)
 )
+
+func itemMappingLatest(deleteDebugStick bool) mapping.Item {
+	if deleteDebugStick {
+		return itemMappingLatestWithDebugStick
+	}
+	return itemMappingLatestWithoutDebugStick
+}

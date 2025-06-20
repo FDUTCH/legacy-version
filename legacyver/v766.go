@@ -19,16 +19,15 @@ var (
 	requiredItemList766 []byte
 	//go:embed data/block_states_766.nbt
 	blockStateData766 []byte
-
-	itemMapping766  = mapping.NewItemMapping(requiredItemList766, ItemVersion766)
-	blockMapping766 = mapping.NewBlockMapping(blockStateData766)
 )
 
-func New766() *Protocol {
+func New766(deleteDebugStick bool) *Protocol {
+	itemMapping := mapping.NewItemMapping(requiredItemList766, ItemVersion766, deleteDebugStick)
+	blockMapping := mapping.NewBlockMapping(blockStateData766)
 	return &Protocol{
 		ver:             "1.21.50",
 		id:              proto.ID766,
-		blockTranslator: NewBlockTranslator(blockMapping766, blockMappingLatest, chunk.NewNetworkPersistentEncoding(blockMapping766, BlockVersion766), chunk.NewBlockPaletteEncoding(blockMapping766, BlockVersion766), false),
-		itemTranslator:  NewItemTranslator(itemMapping766, itemMappingLatest, blockMapping766, blockMappingLatest),
+		blockTranslator: NewBlockTranslator(blockMapping, blockMappingLatest, chunk.NewNetworkPersistentEncoding(blockMapping, BlockVersion766), chunk.NewBlockPaletteEncoding(blockMapping, BlockVersion766), false),
+		itemTranslator:  NewItemTranslator(itemMapping, itemMappingLatest(deleteDebugStick), blockMapping, blockMappingLatest),
 	}
 }
