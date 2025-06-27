@@ -110,10 +110,7 @@ type PlayerMovementSettings struct {
 }
 
 func (p *PlayerMovementSettings) FromLatest(x protocol.PlayerMovementSettings) PlayerMovementSettings {
-	p.MovementType = 1
-	if p.RewindHistorySize > 0 {
-		p.MovementType = 2
-	}
+	p.MovementType = 2
 	p.RewindHistorySize = x.RewindHistorySize
 	p.ServerAuthoritativeBlockBreaking = x.ServerAuthoritativeBlockBreaking
 	return *p
