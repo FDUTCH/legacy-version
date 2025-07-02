@@ -21,7 +21,6 @@ type Item interface {
 	Air() int32
 	ItemVersion() uint16
 	ItemEntries() []ItemEntry
-	SetItemRuntimeID(string, int32)
 }
 
 type ItemEntry struct {
@@ -104,13 +103,6 @@ func NewItemMapping(requiredItemList []byte, itemVersion uint16) *DefaultItemMap
 	}
 
 	return &DefaultItemMapping{itemRuntimeIDsToNames: itemRuntimeIDsToNames, itemNamesToRuntimeIDs: itemNamesToRuntimeIDs, itemRuntimeIDToVersion: itemRuntimeIDToVersion, airRID: *airRID, itemVersion: itemVersion, itemRuntimeIDToData: itemRuntimeIDToData, itemEntries: itemEntries}
-}
-
-func (m *DefaultItemMapping) SetItemRuntimeID(name string, runtimeID int32) {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	m.itemNamesToRuntimeIDs[name] = runtimeID
-	m.itemRuntimeIDsToNames[runtimeID] = name
 }
 
 func (m *DefaultItemMapping) ItemRuntimeIDToName(runtimeID int32) (name string, found bool) {
