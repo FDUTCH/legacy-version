@@ -21,14 +21,14 @@ var (
 	blockStateData748 []byte
 )
 
-func New748(deleteDebugStick bool) *Protocol {
-	itemMapping := mapping.NewItemMapping(requiredItemList748, ItemVersion748, deleteDebugStick)
+func New748(dragonflyMapping bool) *Protocol {
+	itemMapping := mapping.NewItemMapping(requiredItemList748, ItemVersion748)
 	blockMapping := mapping.NewBlockMapping(blockStateData748)
 
 	return &Protocol{
 		ver:             "1.21.40",
 		id:              proto.ID748,
 		blockTranslator: NewBlockTranslator(blockMapping, blockMappingLatest, chunk.NewNetworkPersistentEncoding(blockMapping, BlockVersion748), chunk.NewBlockPaletteEncoding(blockMapping, BlockVersion748), false),
-		itemTranslator:  NewItemTranslator(itemMapping, itemMappingLatest(deleteDebugStick), blockMapping, blockMappingLatest),
+		itemTranslator:  NewItemTranslator(itemMapping, itemMappingLatest(dragonflyMapping), blockMapping, blockMappingLatest),
 	}
 }

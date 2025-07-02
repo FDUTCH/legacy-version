@@ -21,6 +21,7 @@ type Item interface {
 	Air() int32
 	ItemVersion() uint16
 	ItemEntries() []ItemEntry
+	SetItemRuntimeID(string, int32)
 }
 
 type ItemEntry struct {
@@ -48,14 +49,13 @@ type DefaultItemMapping struct {
 	itemVersion uint16
 }
 
-func NewItemMapping(requiredItemList []byte, itemVersion uint16, deleteDebugStick bool) *DefaultItemMapping {
+func NewItemMapping(requiredItemList []byte, itemVersion uint16) *DefaultItemMapping {
 	itemRuntimeIDsToNames := make(map[int32]string)
 	itemNamesToRuntimeIDs := make(map[string]int32)
 	itemRuntimeIDToVersion := make(map[int32]uint8)
 	itemRuntimeIDToData := make(map[int32]map[string]any)
 	itemEntries := make([]ItemEntry, 0, 1600)
 	var airRID *int32
-	var debugStickRID *int32
 
 	var m map[string]struct {
 		RuntimeID      int16  `json:"runtime_id"`
@@ -65,21 +65,6 @@ func NewItemMapping(requiredItemList []byte, itemVersion uint16, deleteDebugStic
 	}
 	if err := json.Unmarshal(requiredItemList, &m); err != nil {
 		panic(err)
-	}
-
-	if v, ok := m["minecraft:debug_stick"]; ok {
-		rid := int32(v.RuntimeID)
-		debugStickRID = &rid
-	}
-
-	if deleteDebugStick && debugStickRID != nil {
-		delete(m, "minecraft:debug_stick")
-		for name, data := range m {
-			if int32(data.RuntimeID) > *debugStickRID {
-				data.RuntimeID-- // Shift all runtime IDs down by 1
-			}
-			m[name] = data
-		}
 	}
 
 	for name, data := range m {
@@ -119,6 +104,13 @@ func NewItemMapping(requiredItemList []byte, itemVersion uint16, deleteDebugStic
 	}
 
 	return &DefaultItemMapping{itemRuntimeIDsToNames: itemRuntimeIDsToNames, itemNamesToRuntimeIDs: itemNamesToRuntimeIDs, itemRuntimeIDToVersion: itemRuntimeIDToVersion, airRID: *airRID, itemVersion: itemVersion, itemRuntimeIDToData: itemRuntimeIDToData, itemEntries: itemEntries}
+}
+
+func (m *DefaultItemMapping) SetItemRuntimeID(name string, runtimeID int32) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.itemNamesToRuntimeIDs[name] = runtimeID
+	m.itemRuntimeIDsToNames[runtimeID] = name
 }
 
 func (m *DefaultItemMapping) ItemRuntimeIDToName(runtimeID int32) (name string, found bool) {
