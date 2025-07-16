@@ -2,6 +2,8 @@ package legacyver
 
 import (
 	_ "embed"
+	"github.com/akmalfairuz/legacy-version/internal/chunk"
+	"github.com/akmalfairuz/legacy-version/legacyver/proto"
 	"github.com/akmalfairuz/legacy-version/mapping"
 )
 
@@ -17,17 +19,15 @@ var (
 	requiredItemList818 []byte
 	//go:embed data/block_states_818.nbt
 	blockStateData818 []byte
-
-	dragonflyLatestItemList []byte = requiredItemList818
-
-	itemMappingLatestPocketMine = mapping.NewItemMapping(requiredItemList818, ItemVersion818)
-	itemMappingLatestDragonfly  = mapping.NewItemMapping(dragonflyLatestItemList, ItemVersion818)
-	blockMappingLatest          = mapping.NewBlockMapping(blockStateData818)
 )
 
-func itemMappingLatest(dragonflyMapping bool) mapping.Item {
-	if dragonflyMapping {
-		return itemMappingLatestDragonfly
+func New818(dragonflyMapping bool) *Protocol {
+	itemMapping := mapping.NewItemMapping(requiredItemList818, ItemVersion818)
+	blockMapping := mapping.NewBlockMapping(blockStateData818)
+	return &Protocol{
+		ver:             "1.21.90",
+		id:              proto.ID818,
+		blockTranslator: NewBlockTranslator(blockMapping, blockMappingLatest, chunk.NewNetworkPersistentEncoding(blockMapping, BlockVersion818), chunk.NewBlockPaletteEncoding(blockMapping, BlockVersion818), false),
+		itemTranslator:  NewItemTranslator(itemMapping, itemMappingLatest(dragonflyMapping), blockMapping, blockMappingLatest),
 	}
-	return itemMappingLatestPocketMine
 }
