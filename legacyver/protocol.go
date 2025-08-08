@@ -1,13 +1,14 @@
 package legacyver
 
 import (
+	"strings"
+
 	"github.com/akmalfairuz/legacy-version/legacyver/legacypacket"
 	"github.com/akmalfairuz/legacy-version/legacyver/proto"
 	"github.com/samber/lo"
 	"github.com/sandertv/gophertunnel/minecraft"
 	"github.com/sandertv/gophertunnel/minecraft/protocol"
 	"github.com/sandertv/gophertunnel/minecraft/protocol/packet"
-	"strings"
 )
 
 var (
@@ -722,7 +723,7 @@ func (p *Protocol) downgradePackets(pks []packet.Packet, conn *minecraft.Conn) [
 			}
 		case *packet.BiomeDefinitionList:
 			pks[pkIndex] = &legacypacket.BiomeDefinitionList{
-				BiomeDefinitions: pk.BiomeDefinitions,
+				BiomeDefinitions: proto.DowngradeBiomeDefinitions(pk.BiomeDefinitions),
 				StringList:       pk.StringList,
 			}
 		case *packet.PlayerList:
@@ -1258,7 +1259,7 @@ func (p *Protocol) upgradePackets(pks []packet.Packet, conn *minecraft.Conn) []p
 			}
 		case *legacypacket.BiomeDefinitionList:
 			pks[pkIndex] = &packet.BiomeDefinitionList{
-				BiomeDefinitions: pk.BiomeDefinitions,
+				BiomeDefinitions: proto.UpgradeBiomeDefinitions(pk.BiomeDefinitions),
 				StringList:       pk.StringList,
 			}
 		case *legacypacket.PlayerList:
