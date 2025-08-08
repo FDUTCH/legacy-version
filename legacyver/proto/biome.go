@@ -68,12 +68,13 @@ func (x *BiomeDefinition) Marshal(r protocol.IO) {
 	if IsProtoGTE(r, ID827) {
 		r.Int16(&x.BiomeID)
 	} else {
-		var opt protocol.Optional[int16]
+		var opt protocol.Optional[uint16]
 		if x.BiomeID != -1 {
-			opt = protocol.Option(x.BiomeID)
+			opt = protocol.Option(uint16(x.BiomeID))
 		}
-		protocol.OptionalFunc(r, &opt, r.Int16)
-		x.BiomeID, _ = opt.Value()
+		protocol.OptionalFunc(r, &opt, r.Uint16)
+		b, _ := opt.Value()
+		x.BiomeID = int16(b)
 	}
 	r.Float32(&x.Temperature)
 	r.Float32(&x.Downfall)
