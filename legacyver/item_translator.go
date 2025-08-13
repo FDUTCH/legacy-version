@@ -2,6 +2,7 @@ package legacyver
 
 import (
 	"fmt"
+
 	"github.com/akmalfairuz/legacy-version/internal/item"
 	"github.com/akmalfairuz/legacy-version/legacyver/proto"
 	"github.com/akmalfairuz/legacy-version/mapping"

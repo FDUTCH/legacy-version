@@ -2,6 +2,7 @@ package legacyver
 
 import (
 	_ "embed"
+
 	"github.com/akmalfairuz/legacy-version/internal/chunk"
 	"github.com/akmalfairuz/legacy-version/legacyver/proto"
 	"github.com/akmalfairuz/legacy-version/mapping"

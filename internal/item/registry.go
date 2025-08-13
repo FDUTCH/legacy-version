@@ -4,12 +4,13 @@ import (
 	"bytes"
 	"embed"
 	"encoding/json"
-	"github.com/df-mc/worldupgrader/blockupgrader"
-	"github.com/sandertv/gophertunnel/minecraft/nbt"
-	"github.com/sandertv/gophertunnel/minecraft/protocol"
 	"regexp"
 	"sort"
 	"strconv"
+
+	"github.com/df-mc/worldupgrader/blockupgrader"
+	"github.com/sandertv/gophertunnel/minecraft/nbt"
+	"github.com/sandertv/gophertunnel/minecraft/protocol"
 )
 
 var (

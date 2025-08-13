@@ -3,6 +3,8 @@ package legacyver
 import (
 	"bytes"
 	_ "embed"
+
+	"github.com/akmalfairuz/legacy-version/internal"
 	"github.com/akmalfairuz/legacy-version/internal/chunk"
 	"github.com/akmalfairuz/legacy-version/mapping"
 	"github.com/df-mc/dragonfly/server/block/cube"
@@ -43,62 +45,69 @@ func NewBlockTranslator(mapping mapping.Block, latestMapping mapping.Block, pse 
 	return &DefaultBlockTranslator{mapping: mapping, latest: latestMapping, pse: pse, pe: pe, oldFormat: oldFormat}
 }
 
+func (t *DefaultBlockTranslator) downgradeLevelChunkPacket(pk *packet.LevelChunk) error {
+	count := int(pk.SubChunkCount)
+	if count == protocol.SubChunkRequestModeLimitless || count == protocol.SubChunkRequestModeLimited {
+		return nil
+	}
+
+	buf := bytes.NewBuffer(pk.RawPayload)
+	writeBuf := internal.BufferPool.Get().(*bytes.Buffer)
+	defer func() {
+		writeBuf.Reset()
+		internal.BufferPool.Put(writeBuf)
+	}()
+	if !pk.CacheEnabled {
+		c, err := chunk.NetworkDecode(t.latest.Air(), buf, count, false, world.Overworld.Range(), LatestNetworkPersistentEncoding, LatestBlockPaletteEncoding)
+		if err != nil {
+			return err
+		}
+		c = t.DowngradeChunk(c)
+
+		payload, err := chunk.NetworkEncode(t.mapping.Air(), c, t.oldFormat, t.pe)
+		if err != nil {
+			return err
+		}
+		writeBuf.Write(payload)
+		pk.SubChunkCount = uint32(len(c.Sub()))
+	}
+	safeBytes := buf.Bytes()
+
+	countBorder, err := buf.ReadByte()
+	if err != nil {
+		pk.RawPayload = append(writeBuf.Bytes(), safeBytes...)
+		return nil
+	}
+	borderBytes := make([]byte, countBorder)
+	if _, err = buf.Read(borderBytes); err != nil {
+		pk.RawPayload = append(writeBuf.Bytes(), safeBytes...)
+		return nil
+	}
+	writeBuf.WriteByte(countBorder)
+	writeBuf.Write(borderBytes)
+
+	enc := nbt.NewEncoderWithEncoding(writeBuf, nbt.NetworkLittleEndian)
+	dec := nbt.NewDecoderWithEncoding(buf, nbt.NetworkLittleEndian)
+	for {
+		var decNbt map[string]any
+		if err = dec.Decode(&decNbt); err != nil {
+			break
+		}
+		t.mapping.DowngradeBlockActorData(decNbt)
+
+		if err = enc.Encode(decNbt); err != nil {
+			break
+		}
+	}
+	pk.RawPayload = append(writeBuf.Bytes(), buf.Bytes()...)
+	return nil
+}
+
 func (t *DefaultBlockTranslator) DowngradeBlockPackets(pks []packet.Packet, conn *minecraft.Conn) (result []packet.Packet) {
 	for _, pk := range pks {
 		switch pk := pk.(type) {
 		case *packet.LevelChunk:
-			count := int(pk.SubChunkCount)
-			if count == protocol.SubChunkRequestModeLimitless || count == protocol.SubChunkRequestModeLimited {
-				break
-			}
-
-			buf := bytes.NewBuffer(pk.RawPayload)
-			writeBuf := bytes.NewBuffer(nil)
-			if !pk.CacheEnabled {
-				c, err := chunk.NetworkDecode(t.latest.Air(), buf, count, false, world.Overworld.Range(), LatestNetworkPersistentEncoding, LatestBlockPaletteEncoding)
-				if err != nil {
-					//fmt.Println(err)
-					break
-				}
-				c = t.DowngradeChunk(c)
-
-				payload, err := chunk.NetworkEncode(t.mapping.Air(), c, t.oldFormat, t.pe)
-				if err != nil {
-					//fmt.Println(err)
-					break
-				}
-				writeBuf.Write(payload)
-				pk.SubChunkCount = uint32(len(c.Sub()))
-			}
-			safeBytes := buf.Bytes()
-
-			countBorder, err := buf.ReadByte()
-			if err != nil {
-				pk.RawPayload = append(writeBuf.Bytes(), safeBytes...)
-				break
-			}
-			borderBytes := make([]byte, countBorder)
-			if _, err = buf.Read(borderBytes); err != nil {
-				pk.RawPayload = append(writeBuf.Bytes(), safeBytes...)
-				break
-			}
-			writeBuf.WriteByte(countBorder)
-			writeBuf.Write(borderBytes)
-
-			enc := nbt.NewEncoderWithEncoding(writeBuf, nbt.NetworkLittleEndian)
-			dec := nbt.NewDecoderWithEncoding(buf, nbt.NetworkLittleEndian)
-			for {
-				var decNbt map[string]any
-				if err = dec.Decode(&decNbt); err != nil {
-					break
-				}
-				t.mapping.DowngradeBlockActorData(decNbt)
-
-				if err = enc.Encode(decNbt); err != nil {
-					break
-				}
-			}
-			pk.RawPayload = append(writeBuf.Bytes(), buf.Bytes()...)
+			_ = t.downgradeLevelChunkPacket(pk)
 		case *packet.SubChunk:
 			r := world.Overworld.Range()
 			if t.oldFormat {
@@ -247,11 +256,11 @@ func (t *DefaultBlockTranslator) DowngradeBlockRuntimeID(input uint32) uint32 {
 	}
 	state, ok := t.latest.RuntimeIDToState(input)
 	if !ok {
-		return t.mapping.Air()
+		return t.mapping.InfoUpdate()
 	}
 	runtimeID, ok := t.mapping.StateToRuntimeID(state)
 	if !ok {
-		return t.mapping.Air()
+		return t.mapping.InfoUpdate()
 	}
 	return runtimeID
 }
@@ -315,11 +324,11 @@ func (t *DefaultBlockTranslator) UpgradeBlockRuntimeID(input uint32) uint32 {
 	}
 	state, ok := t.mapping.RuntimeIDToState(input)
 	if !ok {
-		return t.latest.Air()
+		return t.latest.InfoUpdate()
 	}
 	runtimeID, ok := t.latest.StateToRuntimeID(state)
 	if !ok {
-		return t.latest.Air()
+		return t.latest.InfoUpdate()
 	}
 	return runtimeID
 }
