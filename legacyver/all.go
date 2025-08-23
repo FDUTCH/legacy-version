@@ -14,7 +14,7 @@ var (
 	EnableChunkTranslation = true
 
 	blockTranslatorsMu sync.RWMutex
-	blockTranslators   map[int32]BlockTranslator
+	blockTranslators   = make(map[int32]BlockTranslator)
 )
 
 // All returns a slice of all legacy protocol versions that are supported. dragonflyMapping
