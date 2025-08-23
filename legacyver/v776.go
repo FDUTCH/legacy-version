@@ -3,7 +3,6 @@ package legacyver
 import (
 	_ "embed"
 
-	"github.com/akmalfairuz/legacy-version/internal/chunk"
 	"github.com/akmalfairuz/legacy-version/legacyver/proto"
 	"github.com/akmalfairuz/legacy-version/mapping"
 )
@@ -24,12 +23,11 @@ var (
 
 func New776(dragonflyMapping bool) *Protocol {
 	itemMapping := mapping.NewItemMapping(requiredItemList776, ItemVersion776)
-	blockMapping := mapping.NewBlockMapping(blockStateData776)
-
+	blockTranslator := lookupOrCreateBlockTranslator(776, BlockVersion776, blockStateData776)
 	return &Protocol{
 		ver:             "1.21.60",
 		id:              proto.ID776,
-		blockTranslator: NewBlockTranslator(blockMapping, blockMappingLatest, chunk.NewNetworkPersistentEncoding(blockMapping, BlockVersion776), chunk.NewBlockPaletteEncoding(blockMapping, BlockVersion776), false),
-		itemTranslator:  NewItemTranslator(itemMapping, itemMappingLatest(dragonflyMapping), blockMapping, blockMappingLatest),
+		blockTranslator: blockTranslator,
+		itemTranslator:  NewItemTranslator(itemMapping, itemMappingLatest(dragonflyMapping), blockTranslator.BlockMapping(), blockMappingLatest),
 	}
 }
