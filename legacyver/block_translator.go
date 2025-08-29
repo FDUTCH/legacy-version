@@ -3,8 +3,10 @@ package legacyver
 import (
 	"bytes"
 	_ "embed"
+
 	"github.com/akmalfairuz/legacy-version/internal/chunk"
 	"github.com/akmalfairuz/legacy-version/mapping"
+	"github.com/cespare/xxhash/v2"
 	"github.com/df-mc/dragonfly/server/block/cube"
 	"github.com/df-mc/dragonfly/server/world"
 	"github.com/sandertv/gophertunnel/minecraft"
@@ -135,6 +137,7 @@ func (t *DefaultBlockTranslator) DowngradeBlockPackets(pks []packet.Packet, conn
 					}
 
 					entry.RawPayload = append(writeBuf.Bytes(), buf.Bytes()...)
+					entry.BlobHash = xxhash.Sum64(entry.RawPayload)
 					pk.SubChunkEntries[i] = entry
 				}
 			}
@@ -155,6 +158,7 @@ func (t *DefaultBlockTranslator) DowngradeBlockPackets(pks []packet.Packet, conn
 				t.DowngradeSubChunk(subChunk)
 
 				blob.Payload = append(chunk.EncodeSubChunk(subChunk, chunk.NetworkEncoding, t.pe, chunk.SubChunkVersion9, r, int(ind)), buf.Bytes()...)
+				blob.Hash = xxhash.Sum64(blob.Payload)
 				pk.Blobs[i] = blob
 			}
 		case *packet.UpdateSubChunkBlocks:

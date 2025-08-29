@@ -21,6 +21,7 @@ require (
 
 require (
 	github.com/brentp/intintmap v0.0.0-20190211203843-30dc0ade9af9 // indirect
+	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/df-mc/goleveldb v1.1.9 // indirect
 	github.com/go-jose/go-jose/v4 v4.1.0 // indirect
 	github.com/golang/snappy v1.0.0 // indirect
