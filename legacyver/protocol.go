@@ -179,7 +179,7 @@ func (p *Protocol) downgradePackets(pks []packet.Packet, conn *minecraft.Conn) [
 	for pkIndex, pk := range pks {
 		switch pk := pk.(type) {
 		case *packet.ClientCacheStatus:
-			pk.Enabled = false // TODO: enable when chunk translation is not broken
+			// pk.Enabled = false // TODO: enable when chunk translation is not broken
 		case *packet.SetActorMotion:
 			pks[pkIndex] = &legacypacket.SetActorMotion{
 				EntityRuntimeID: pk.EntityRuntimeID,
@@ -756,7 +756,7 @@ func (p *Protocol) upgradePackets(pks []packet.Packet, conn *minecraft.Conn) []p
 	for pkIndex, pk := range pks {
 		switch pk := pk.(type) {
 		case *packet.ClientCacheStatus:
-			pk.Enabled = false // TODO: enable when chunk translation is not broken
+			// pk.Enabled = false // TODO: enable when chunk translation is not broken
 		case *legacypacket.SetActorMotion:
 			pks[pkIndex] = &packet.SetActorMotion{
 				EntityRuntimeID: pk.EntityRuntimeID,
