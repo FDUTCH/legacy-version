@@ -50,6 +50,10 @@ func (pk *CorrectPlayerMovePrediction) Marshal(io protocol.IO) {
 			protocol.OptionalFunc(io, &pk.VehicleAngularVelocity, io.Float32)
 		}
 	}
+	if proto.IsProtoGTE(io, proto.ID827) {
+		io.Vec2(&pk.Rotation)
+		protocol.OptionalFunc(io, &pk.VehicleAngularVelocity, io.Float32)
+	}
 	io.Bool(&pk.OnGround)
 	io.Varuint64(&pk.Tick)
 }

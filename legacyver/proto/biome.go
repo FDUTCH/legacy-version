@@ -1,18 +1,13 @@
 package proto
 
-import (
-	"unsafe"
-	_ "unsafe"
-
-	"github.com/sandertv/gophertunnel/minecraft/protocol"
-)
+import "github.com/sandertv/gophertunnel/minecraft/protocol"
 
 // BiomeDefinition represents a biome definition in the game. This can be a vanilla biome or a completely
 // custom biome.
 type BiomeDefinition struct {
 	// NameIndex represents the index of the biome name in the string list.
 	NameIndex int16
-	// BiomeID is the biome ID.
+	// BiomeID is the biome ID. This is optional and can be empty.
 	BiomeID int16
 	// Temperature is the temperature of the biome, used for weather, biome behaviours and sky colour.
 	Temperature float32
@@ -26,6 +21,8 @@ type BiomeDefinition struct {
 	AshDensity float32
 	// WhiteAshDensity is the density of white ash precipitation visuals.
 	WhiteAshDensity float32
+	// FoliageSnow ...
+	FoliageSnow float32
 	// Depth ...
 	Depth float32
 	// Scale ...
@@ -43,45 +40,29 @@ type BiomeDefinition struct {
 	ChunkGeneration protocol.Optional[protocol.BiomeChunkGeneration]
 }
 
-// TODO: This will be required to be changed when the structs are modified in future MC updates.
-func DowngradeBiomeDefinitions(bd []protocol.BiomeDefinition) []BiomeDefinition {
-	converted := make([]BiomeDefinition, len(bd))
-	for i, b := range bd {
-		ptr := unsafe.Pointer(&b)
-		converted[i] = *(*BiomeDefinition)(ptr)
-	}
-	return converted
-}
-
-// TODO: This will be required to be changed when the structs are modified in future MC updates.
-func UpgradeBiomeDefinitions(bd []BiomeDefinition) []protocol.BiomeDefinition {
-	converted := make([]protocol.BiomeDefinition, len(bd))
-	for i, b := range bd {
-		ptr := unsafe.Pointer(&b)
-		converted[i] = *(*protocol.BiomeDefinition)(ptr)
-	}
-	return converted
-}
-
 func (x *BiomeDefinition) Marshal(r protocol.IO) {
 	r.Int16(&x.NameIndex)
-	if IsProtoGTE(r, ID827) {
-		r.Int16(&x.BiomeID)
-	} else {
-		var opt protocol.Optional[uint16]
+	if IsProtoLT(r, ID827) {
+		var opt protocol.Optional[int16]
 		if x.BiomeID != -1 {
-			opt = protocol.Option(uint16(x.BiomeID))
+			opt = protocol.Option(x.BiomeID)
 		}
-		protocol.OptionalFunc(r, &opt, r.Uint16)
-		b, _ := opt.Value()
-		x.BiomeID = int16(b)
+		protocol.OptionalFunc(r, &opt, r.Int16)
+		x.BiomeID, _ = opt.Value()
+	} else {
+		r.Int16(&x.BiomeID)
 	}
 	r.Float32(&x.Temperature)
 	r.Float32(&x.Downfall)
-	r.Float32(&x.RedSporeDensity)
-	r.Float32(&x.BlueSporeDensity)
-	r.Float32(&x.AshDensity)
-	r.Float32(&x.WhiteAshDensity)
+	if IsProtoLT(r, ID844) {
+		r.Float32(&x.RedSporeDensity)
+		r.Float32(&x.BlueSporeDensity)
+		r.Float32(&x.AshDensity)
+		r.Float32(&x.WhiteAshDensity)
+	}
+	if IsProtoGTE(r, ID844) {
+		r.Float32(&x.FoliageSnow)
+	}
 	r.Float32(&x.Depth)
 	r.Float32(&x.Scale)
 	r.Int32(&x.MapWaterColour)
@@ -90,4 +71,43 @@ func (x *BiomeDefinition) Marshal(r protocol.IO) {
 		protocol.FuncSlice(r, s, r.Uint16)
 	})
 	protocol.OptionalMarshaler(r, &x.ChunkGeneration)
+}
+
+func (x *BiomeDefinition) FromLatest(bd protocol.BiomeDefinition) BiomeDefinition {
+	x.NameIndex = bd.NameIndex
+	x.BiomeID = bd.BiomeID
+	x.Temperature = bd.Temperature
+	x.Downfall = bd.Downfall
+	//x.RedSporeDensity = bd.RedSporeDensity
+	//x.BlueSporeDensity = bd.BlueSporeDensity
+	//x.AshDensity = bd.AshDensity
+	//x.WhiteAshDensity = bd.WhiteAshDensity
+	x.FoliageSnow = bd.FoliageSnow
+	x.Depth = bd.Depth
+	x.Scale = bd.Scale
+	x.MapWaterColour = bd.MapWaterColour
+	x.Rain = bd.Rain
+	x.Tags = bd.Tags
+	x.ChunkGeneration = bd.ChunkGeneration
+	return *x
+}
+
+func (x *BiomeDefinition) ToLatest() protocol.BiomeDefinition {
+	return protocol.BiomeDefinition{
+		NameIndex:   x.NameIndex,
+		BiomeID:     x.BiomeID,
+		Temperature: x.Temperature,
+		Downfall:    x.Downfall,
+		//RedSporeDensity:  x.RedSporeDensity,
+		//BlueSporeDensity: x.BlueSporeDensity,
+		//AshDensity:       x.AshDensity,
+		//WhiteAshDensity:  x.WhiteAshDensity,
+		FoliageSnow:     x.FoliageSnow,
+		Depth:           x.Depth,
+		Scale:           x.Scale,
+		MapWaterColour:  x.MapWaterColour,
+		Rain:            x.Rain,
+		Tags:            x.Tags,
+		ChunkGeneration: x.ChunkGeneration,
+	}
 }

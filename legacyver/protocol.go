@@ -127,6 +127,8 @@ func convertPacketFunc(pid uint32, cur func() packet.Packet) func() packet.Packe
 		return func() packet.Packet { return &legacypacket.PlayerList{} }
 	case packet.IDSubChunk:
 		return func() packet.Packet { return &legacypacket.SubChunk{} }
+	case packet.IDGameRulesChanged:
+		return func() packet.Packet { return &legacypacket.GameRulesChanged{} }
 	default:
 		return cur
 	}
@@ -295,11 +297,12 @@ func (p *Protocol) downgradePackets(pks []packet.Packet, conn *minecraft.Conn) [
 			}
 		case *packet.CameraAimAssist:
 			pks[pkIndex] = &legacypacket.CameraAimAssist{
-				Preset:     pk.Preset,
-				Angle:      pk.Angle,
-				Distance:   pk.Distance,
-				TargetMode: pk.TargetMode,
-				Action:     pk.Action,
+				Preset:          pk.Preset,
+				Angle:           pk.Angle,
+				Distance:        pk.Distance,
+				TargetMode:      pk.TargetMode,
+				Action:          pk.Action,
+				ShowDebugRender: pk.ShowDebugRender,
 			}
 		case *packet.UpdateAttributes:
 			attributes := make([]proto.Attribute, len(pk.Attributes))
@@ -393,6 +396,7 @@ func (p *Protocol) downgradePackets(pks []packet.Packet, conn *minecraft.Conn) [
 				Fade:         pk.Fade,
 				Target:       pk.Target,
 				RemoveTarget: pk.RemoveTarget,
+				FieldOfView:  pk.FieldOfView,
 			}
 		case *packet.ChangeDimension:
 			pks[pkIndex] = &legacypacket.ChangeDimension{
@@ -434,12 +438,7 @@ func (p *Protocol) downgradePackets(pks []packet.Packet, conn *minecraft.Conn) [
 			}
 		case *packet.PlayerArmourDamage:
 			pks[pkIndex] = &legacypacket.PlayerArmourDamage{
-				Bitset:           pk.Bitset,
-				HelmetDamage:     pk.HelmetDamage,
-				ChestplateDamage: pk.ChestplateDamage,
-				LeggingsDamage:   pk.LeggingsDamage,
-				BootsDamage:      pk.BootsDamage,
-				BodyDamage:       pk.BodyDamage,
+				List: pk.List,
 			}
 		case *packet.SetTitle:
 			pks[pkIndex] = &legacypacket.SetTitle{
@@ -595,6 +594,7 @@ func (p *Protocol) downgradePackets(pks []packet.Packet, conn *minecraft.Conn) [
 				ScenarioID:                     pk.ScenarioID,
 				OwnerID:                        pk.OwnerID,
 				UseBlockNetworkIDHashes:        pk.UseBlockNetworkIDHashes,
+				TickDeathSystemsEnabled:        pk.TickDeathSystemsEnabled,
 				ServerAuthoritativeSound:       pk.ServerAuthoritativeSound,
 			}
 		case *packet.CodeBuilderSource:
@@ -722,8 +722,12 @@ func (p *Protocol) downgradePackets(pks []packet.Packet, conn *minecraft.Conn) [
 				Visibility: pk.Visibility,
 			}
 		case *packet.BiomeDefinitionList:
+			biomeDefinitions := make([]proto.BiomeDefinition, len(pk.BiomeDefinitions))
+			for i, bd := range pk.BiomeDefinitions {
+				biomeDefinitions[i] = (&proto.BiomeDefinition{}).FromLatest(bd)
+			}
 			pks[pkIndex] = &legacypacket.BiomeDefinitionList{
-				BiomeDefinitions: proto.DowngradeBiomeDefinitions(pk.BiomeDefinitions),
+				BiomeDefinitions: biomeDefinitions,
 				StringList:       pk.StringList,
 			}
 		case *packet.PlayerList:
@@ -745,6 +749,10 @@ func (p *Protocol) downgradePackets(pks []packet.Packet, conn *minecraft.Conn) [
 				Dimension:       pk.Dimension,
 				Position:        pk.Position,
 				SubChunkEntries: entries,
+			}
+		case *packet.GameRulesChanged:
+			pks[pkIndex] = &legacypacket.GameRulesChanged{
+				GameRules: pk.GameRules,
 			}
 		}
 	}
@@ -869,11 +877,12 @@ func (p *Protocol) upgradePackets(pks []packet.Packet, conn *minecraft.Conn) []p
 			}
 		case *legacypacket.CameraAimAssist:
 			pks[pkIndex] = &packet.CameraAimAssist{
-				Preset:     pk.Preset,
-				Angle:      pk.Angle,
-				Distance:   pk.Distance,
-				TargetMode: pk.TargetMode,
-				Action:     pk.Action,
+				Preset:          pk.Preset,
+				Angle:           pk.Angle,
+				Distance:        pk.Distance,
+				TargetMode:      pk.TargetMode,
+				Action:          pk.Action,
+				ShowDebugRender: pk.ShowDebugRender,
 			}
 		case *legacypacket.UpdateAttributes:
 			attributes := make([]protocol.Attribute, len(pk.Attributes))
@@ -967,6 +976,7 @@ func (p *Protocol) upgradePackets(pks []packet.Packet, conn *minecraft.Conn) []p
 				Fade:         pk.Fade,
 				Target:       pk.Target,
 				RemoveTarget: pk.RemoveTarget,
+				FieldOfView:  pk.FieldOfView,
 			}
 		case *legacypacket.ChangeDimension:
 			pks[pkIndex] = &packet.ChangeDimension{
@@ -1008,12 +1018,7 @@ func (p *Protocol) upgradePackets(pks []packet.Packet, conn *minecraft.Conn) []p
 			}
 		case *legacypacket.PlayerArmourDamage:
 			pks[pkIndex] = &packet.PlayerArmourDamage{
-				Bitset:           pk.Bitset,
-				HelmetDamage:     pk.HelmetDamage,
-				ChestplateDamage: pk.ChestplateDamage,
-				LeggingsDamage:   pk.LeggingsDamage,
-				BootsDamage:      pk.BootsDamage,
-				BodyDamage:       pk.BodyDamage,
+				List: pk.List,
 			}
 		case *legacypacket.SetTitle:
 			pks[pkIndex] = &packet.SetTitle{
@@ -1157,6 +1162,7 @@ func (p *Protocol) upgradePackets(pks []packet.Packet, conn *minecraft.Conn) []p
 				ScenarioID:                     pk.ScenarioID,
 				OwnerID:                        pk.OwnerID,
 				UseBlockNetworkIDHashes:        pk.UseBlockNetworkIDHashes,
+				TickDeathSystemsEnabled:        pk.TickDeathSystemsEnabled,
 				ServerAuthoritativeSound:       pk.ServerAuthoritativeSound,
 			}
 		case *legacypacket.CodeBuilderSource:
@@ -1258,8 +1264,12 @@ func (p *Protocol) upgradePackets(pks []packet.Packet, conn *minecraft.Conn) []p
 				Visibility: pk.Visibility,
 			}
 		case *legacypacket.BiomeDefinitionList:
+			biomeDefinitions := make([]protocol.BiomeDefinition, len(pk.BiomeDefinitions))
+			for i, bd := range pk.BiomeDefinitions {
+				biomeDefinitions[i] = bd.ToLatest()
+			}
 			pks[pkIndex] = &packet.BiomeDefinitionList{
-				BiomeDefinitions: proto.UpgradeBiomeDefinitions(pk.BiomeDefinitions),
+				BiomeDefinitions: biomeDefinitions,
 				StringList:       pk.StringList,
 			}
 		case *legacypacket.PlayerList:
@@ -1281,6 +1291,10 @@ func (p *Protocol) upgradePackets(pks []packet.Packet, conn *minecraft.Conn) []p
 				Dimension:       pk.Dimension,
 				Position:        pk.Position,
 				SubChunkEntries: entries,
+			}
+		case *legacypacket.GameRulesChanged:
+			pks[pkIndex] = &packet.GameRulesChanged{
+				GameRules: pk.GameRules,
 			}
 		}
 	}

@@ -3,8 +3,9 @@ package mapping
 import (
 	"encoding/base64"
 	"encoding/json"
-	"github.com/sandertv/gophertunnel/minecraft/nbt"
 	"sync"
+
+	"github.com/sandertv/gophertunnel/minecraft/nbt"
 )
 
 type Item interface {

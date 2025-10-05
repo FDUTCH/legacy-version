@@ -2,12 +2,13 @@ package packbuilder
 
 import (
 	"encoding/json"
-	"github.com/google/uuid"
-	"github.com/sandertv/gophertunnel/minecraft/resource"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"github.com/google/uuid"
+	"github.com/sandertv/gophertunnel/minecraft/resource"
 )
 
 // buildManifest creates a JSON manifest file for the client to be able to read the resource pack. It creates

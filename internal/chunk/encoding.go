@@ -4,8 +4,9 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
-	"github.com/akmalfairuz/legacy-version/mapping"
 	"strings"
+
+	"github.com/akmalfairuz/legacy-version/mapping"
 
 	"github.com/df-mc/dragonfly/server/block/cube"
 	"github.com/df-mc/worldupgrader/blockupgrader"
