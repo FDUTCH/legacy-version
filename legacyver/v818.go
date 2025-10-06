@@ -9,7 +9,7 @@ import (
 
 const (
 	// ItemVersion818 ...
-	ItemVersion818 = 261
+	ItemVersion818 = 231
 	// BlockVersion818 ...
 	BlockVersion818 int32 = (1 << 24) | (21 << 16) | (90 << 8)
 )

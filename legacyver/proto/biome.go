@@ -21,6 +21,8 @@ type BiomeDefinition struct {
 	AshDensity float32
 	// WhiteAshDensity is the density of white ash precipitation visuals.
 	WhiteAshDensity float32
+	// FoliageSnow ...
+	FoliageSnow float32
 	// Depth ...
 	Depth float32
 	// Scale ...
@@ -52,10 +54,15 @@ func (x *BiomeDefinition) Marshal(r protocol.IO) {
 	}
 	r.Float32(&x.Temperature)
 	r.Float32(&x.Downfall)
-	r.Float32(&x.RedSporeDensity)
-	r.Float32(&x.BlueSporeDensity)
-	r.Float32(&x.AshDensity)
-	r.Float32(&x.WhiteAshDensity)
+	if IsProtoLT(r, ID844) {
+		r.Float32(&x.RedSporeDensity)
+		r.Float32(&x.BlueSporeDensity)
+		r.Float32(&x.AshDensity)
+		r.Float32(&x.WhiteAshDensity)
+	}
+	if IsProtoGTE(r, ID844) {
+		r.Float32(&x.FoliageSnow)
+	}
 	r.Float32(&x.Depth)
 	r.Float32(&x.Scale)
 	r.Int32(&x.MapWaterColour)
@@ -71,10 +78,11 @@ func (x *BiomeDefinition) FromLatest(bd protocol.BiomeDefinition) BiomeDefinitio
 	x.BiomeID = bd.BiomeID
 	x.Temperature = bd.Temperature
 	x.Downfall = bd.Downfall
-	x.RedSporeDensity = bd.RedSporeDensity
-	x.BlueSporeDensity = bd.BlueSporeDensity
-	x.AshDensity = bd.AshDensity
-	x.WhiteAshDensity = bd.WhiteAshDensity
+	//x.RedSporeDensity = bd.RedSporeDensity
+	//x.BlueSporeDensity = bd.BlueSporeDensity
+	//x.AshDensity = bd.AshDensity
+	//x.WhiteAshDensity = bd.WhiteAshDensity
+	x.FoliageSnow = bd.FoliageSnow
 	x.Depth = bd.Depth
 	x.Scale = bd.Scale
 	x.MapWaterColour = bd.MapWaterColour
@@ -86,19 +94,20 @@ func (x *BiomeDefinition) FromLatest(bd protocol.BiomeDefinition) BiomeDefinitio
 
 func (x *BiomeDefinition) ToLatest() protocol.BiomeDefinition {
 	return protocol.BiomeDefinition{
-		NameIndex:        x.NameIndex,
-		BiomeID:          x.BiomeID,
-		Temperature:      x.Temperature,
-		Downfall:         x.Downfall,
-		RedSporeDensity:  x.RedSporeDensity,
-		BlueSporeDensity: x.BlueSporeDensity,
-		AshDensity:       x.AshDensity,
-		WhiteAshDensity:  x.WhiteAshDensity,
-		Depth:            x.Depth,
-		Scale:            x.Scale,
-		MapWaterColour:   x.MapWaterColour,
-		Rain:             x.Rain,
-		Tags:             x.Tags,
-		ChunkGeneration:  x.ChunkGeneration,
+		NameIndex:   x.NameIndex,
+		BiomeID:     x.BiomeID,
+		Temperature: x.Temperature,
+		Downfall:    x.Downfall,
+		//RedSporeDensity:  x.RedSporeDensity,
+		//BlueSporeDensity: x.BlueSporeDensity,
+		//AshDensity:       x.AshDensity,
+		//WhiteAshDensity:  x.WhiteAshDensity,
+		FoliageSnow:     x.FoliageSnow,
+		Depth:           x.Depth,
+		Scale:           x.Scale,
+		MapWaterColour:  x.MapWaterColour,
+		Rain:            x.Rain,
+		Tags:            x.Tags,
+		ChunkGeneration: x.ChunkGeneration,
 	}
 }

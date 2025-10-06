@@ -127,6 +127,8 @@ func convertPacketFunc(pid uint32, cur func() packet.Packet) func() packet.Packe
 		return func() packet.Packet { return &legacypacket.PlayerList{} }
 	case packet.IDSubChunk:
 		return func() packet.Packet { return &legacypacket.SubChunk{} }
+	case packet.IDGameRulesChanged:
+		return func() packet.Packet { return &legacypacket.GameRulesChanged{} }
 	default:
 		return cur
 	}
@@ -436,12 +438,7 @@ func (p *Protocol) downgradePackets(pks []packet.Packet, conn *minecraft.Conn) [
 			}
 		case *packet.PlayerArmourDamage:
 			pks[pkIndex] = &legacypacket.PlayerArmourDamage{
-				Bitset:           pk.Bitset,
-				HelmetDamage:     pk.HelmetDamage,
-				ChestplateDamage: pk.ChestplateDamage,
-				LeggingsDamage:   pk.LeggingsDamage,
-				BootsDamage:      pk.BootsDamage,
-				BodyDamage:       pk.BodyDamage,
+				List: pk.List,
 			}
 		case *packet.SetTitle:
 			pks[pkIndex] = &legacypacket.SetTitle{
@@ -753,6 +750,10 @@ func (p *Protocol) downgradePackets(pks []packet.Packet, conn *minecraft.Conn) [
 				Position:        pk.Position,
 				SubChunkEntries: entries,
 			}
+		case *packet.GameRulesChanged:
+			pks[pkIndex] = &legacypacket.GameRulesChanged{
+				GameRules: pk.GameRules,
+			}
 		}
 	}
 
@@ -1017,12 +1018,7 @@ func (p *Protocol) upgradePackets(pks []packet.Packet, conn *minecraft.Conn) []p
 			}
 		case *legacypacket.PlayerArmourDamage:
 			pks[pkIndex] = &packet.PlayerArmourDamage{
-				Bitset:           pk.Bitset,
-				HelmetDamage:     pk.HelmetDamage,
-				ChestplateDamage: pk.ChestplateDamage,
-				LeggingsDamage:   pk.LeggingsDamage,
-				BootsDamage:      pk.BootsDamage,
-				BodyDamage:       pk.BodyDamage,
+				List: pk.List,
 			}
 		case *legacypacket.SetTitle:
 			pks[pkIndex] = &packet.SetTitle{
@@ -1295,6 +1291,10 @@ func (p *Protocol) upgradePackets(pks []packet.Packet, conn *minecraft.Conn) []p
 				Dimension:       pk.Dimension,
 				Position:        pk.Position,
 				SubChunkEntries: entries,
+			}
+		case *legacypacket.GameRulesChanged:
+			pks[pkIndex] = &packet.GameRulesChanged{
+				GameRules: pk.GameRules,
 			}
 		}
 	}
