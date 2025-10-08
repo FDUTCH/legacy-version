@@ -63,5 +63,5 @@ func (pk *PlayerArmourDamage) Marshal(io protocol.IO) {
 		}
 		return
 	}
-	protocol.SliceVarint32Length(io, &pk.List)
+	protocol.Slice(io, &pk.List)
 }
