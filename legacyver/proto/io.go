@@ -11,12 +11,17 @@ type IO interface {
 
 	SetProtocolID(protocolID int32)
 	ProtocolID() int32
+	IsReader() bool
 }
 
 type Reader struct {
 	*protocol.Reader
 
 	protocolID int32
+}
+
+func (r *Reader) IsReader() bool {
+	return true
 }
 
 func NewReader(r *protocol.Reader, protocolID int32) *Reader {
@@ -35,6 +40,10 @@ type Writer struct {
 	protocolID int32
 }
 
+func (w *Writer) IsReader() bool {
+	return false
+}
+
 func NewWriter(w *protocol.Writer, protocolID int32) *Writer {
 	return &Writer{w, protocolID}
 }
@@ -43,13 +52,13 @@ func (w *Writer) SetProtocolID(protocolID int32) { w.protocolID = protocolID }
 func (w *Writer) ProtocolID() int32              { return w.protocolID }
 
 func IsReader(r protocol.IO) bool {
-	_, ok := r.(*Reader)
-	return ok
+	reader, ok := r.(IO)
+	return ok && reader.IsReader()
 }
 
 func IsWriter(w protocol.IO) bool {
-	_, ok := w.(*Writer)
-	return ok
+	writer, ok := w.(IO)
+	return ok && !writer.IsReader()
 }
 
 func EmptySlice[T any](io protocol.IO, slice *[]T) {
