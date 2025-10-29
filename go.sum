@@ -2,6 +2,8 @@ github.com/brentp/intintmap v0.0.0-20190211203843-30dc0ade9af9 h1:/G0ghZwrhou0Wq
 github.com/brentp/intintmap v0.0.0-20190211203843-30dc0ade9af9/go.mod h1:TOk10ahXejq9wkEaym3KPRNeuR/h5Jx+s8QRWIa2oTM=
 github.com/cespare/xxhash/v2 v2.3.0 h1:UL815xU9SqsFlibzuggzjXhog7bL6oX9BbNZnL2UFvs=
 github.com/cespare/xxhash/v2 v2.3.0/go.mod h1:VGX0DQ3Q6kWi7AoAeZDth3/j3BFtOZR5XLFGgcrjCOs=
+github.com/cjmustard/gophertunnel v0.0.0-20251029052631-ee1e364af15f h1:d+l0wkZ9j9Bya25hECwMEJMZfNLH+HSpnjNvlMO9qow=
+github.com/cjmustard/gophertunnel v0.0.0-20251029052631-ee1e364af15f/go.mod h1:WjTvUo02TmvPULY1y5oxxAhZIeH8ew31/LUkSUD6ABw=
 github.com/cooldogedev/gophertunnel v0.0.0-20250805131657-cc74f1797ff7 h1:IvKtI+ka2fAVh+QFEuLjLTQPyYARaem3q9pr+Y7wJCI=
 github.com/cooldogedev/gophertunnel v0.0.0-20250805131657-cc74f1797ff7/go.mod h1:lmRarAmn25V/+QeiUbUDXeA26bEaNlX1wGEM/rj39ew=
 github.com/cooldogedev/gophertunnel v0.0.0-20250806215416-758d5047d822 h1:cW4FrZUxjdJBoSD3Fpw7Z86LQJHtTK7o9lIgGXuaZ3Q=
