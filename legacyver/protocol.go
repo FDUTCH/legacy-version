@@ -129,6 +129,8 @@ func convertPacketFunc(pid uint32, cur func() packet.Packet) func() packet.Packe
 		return func() packet.Packet { return &legacypacket.SubChunk{} }
 	case packet.IDGameRulesChanged:
 		return func() packet.Packet { return &legacypacket.GameRulesChanged{} }
+	case packet.IDAnimate:
+		return func() packet.Packet { return &legacypacket.Animate{} }
 	default:
 		return cur
 	}
@@ -391,12 +393,15 @@ func (p *Protocol) downgradePackets(pks []packet.Packet, conn *minecraft.Conn) [
 				iSet = protocol.Option((&proto.CameraInstructionSet{}).FromLatest(v))
 			}
 			pks[pkIndex] = &legacypacket.CameraInstruction{
-				Set:          iSet,
-				Clear:        pk.Clear,
-				Fade:         pk.Fade,
-				Target:       pk.Target,
-				RemoveTarget: pk.RemoveTarget,
-				FieldOfView:  pk.FieldOfView,
+				Set:              iSet,
+				Clear:            pk.Clear,
+				Fade:             pk.Fade,
+				Target:           pk.Target,
+				RemoveTarget:     pk.RemoveTarget,
+				FieldOfView:      pk.FieldOfView,
+				Spline:           pk.Spline,
+				AttachToEntity:   pk.AttachToEntity,
+				DetachFromEntity: pk.DetachFromEntity,
 			}
 		case *packet.ChangeDimension:
 			pks[pkIndex] = &legacypacket.ChangeDimension{
@@ -754,6 +759,13 @@ func (p *Protocol) downgradePackets(pks []packet.Packet, conn *minecraft.Conn) [
 			pks[pkIndex] = &legacypacket.GameRulesChanged{
 				GameRules: pk.GameRules,
 			}
+		case *packet.Animate:
+			pks[pkIndex] = &legacypacket.Animate{
+				ActionType:      pk.ActionType,
+				EntityRuntimeID: pk.EntityRuntimeID,
+				Data:            pk.Data,
+				RowingTime:      pk.RowingTime,
+			}
 		}
 	}
 
@@ -971,12 +983,15 @@ func (p *Protocol) upgradePackets(pks []packet.Packet, conn *minecraft.Conn) []p
 				iSet = protocol.Option(v.ToLatest())
 			}
 			pks[pkIndex] = &packet.CameraInstruction{
-				Set:          iSet,
-				Clear:        pk.Clear,
-				Fade:         pk.Fade,
-				Target:       pk.Target,
-				RemoveTarget: pk.RemoveTarget,
-				FieldOfView:  pk.FieldOfView,
+				Set:              iSet,
+				Clear:            pk.Clear,
+				Fade:             pk.Fade,
+				Target:           pk.Target,
+				RemoveTarget:     pk.RemoveTarget,
+				FieldOfView:      pk.FieldOfView,
+				Spline:           pk.Spline,
+				AttachToEntity:   pk.AttachToEntity,
+				DetachFromEntity: pk.DetachFromEntity,
 			}
 		case *legacypacket.ChangeDimension:
 			pks[pkIndex] = &packet.ChangeDimension{
@@ -1295,6 +1310,13 @@ func (p *Protocol) upgradePackets(pks []packet.Packet, conn *minecraft.Conn) []p
 		case *legacypacket.GameRulesChanged:
 			pks[pkIndex] = &packet.GameRulesChanged{
 				GameRules: pk.GameRules,
+			}
+		case *legacypacket.Animate:
+			pks[pkIndex] = &packet.Animate{
+				ActionType:      pk.ActionType,
+				EntityRuntimeID: pk.EntityRuntimeID,
+				Data:            pk.Data,
+				RowingTime:      pk.RowingTime,
 			}
 		}
 	}
