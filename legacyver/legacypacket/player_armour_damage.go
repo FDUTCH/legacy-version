@@ -31,7 +31,7 @@ func (pk *PlayerArmourDamage) Marshal(io protocol.IO) {
 			for _, flag := range flags {
 				if bitset&flag != 0 {
 					v := protocol.PlayerArmourDamageEntry{
-						ArmourSlot: flag,
+						ArmourSlot: int32(flag),
 					}
 					v2 := int32(0)
 					io.Varint32(&v2)
@@ -53,7 +53,7 @@ func (pk *PlayerArmourDamage) Marshal(io protocol.IO) {
 			if bitset&flag != 0 {
 				damage := int32(0)
 				for _, entry := range pk.List {
-					if entry.ArmourSlot == flag {
+					if entry.ArmourSlot == int32(flag) {
 						damage = int32(entry.Damage)
 						break
 					}
