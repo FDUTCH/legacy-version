@@ -106,6 +106,65 @@ func NewItemMapping(requiredItemList []byte, itemVersion uint16) *DefaultItemMap
 	return &DefaultItemMapping{itemRuntimeIDsToNames: itemRuntimeIDsToNames, itemNamesToRuntimeIDs: itemNamesToRuntimeIDs, itemRuntimeIDToVersion: itemRuntimeIDToVersion, airRID: *airRID, itemVersion: itemVersion, itemRuntimeIDToData: itemRuntimeIDToData, itemEntries: itemEntries}
 }
 
+func NewDFItemMapping(requiredItemList []byte, itemVersion uint16) *DefaultItemMapping {
+	itemRuntimeIDsToNames := make(map[int32]string)
+	itemNamesToRuntimeIDs := make(map[string]int32)
+	itemRuntimeIDToVersion := make(map[int32]uint8)
+	itemRuntimeIDToData := make(map[int32]map[string]any)
+	itemEntries := make([]ItemEntry, 0, 1600)
+	var airRID *int32
+
+	var m map[string]struct {
+		RuntimeID      int32          `nbt:"runtime_id"`
+		ComponentBased bool           `nbt:"component_based"`
+		Version        int32          `nbt:"version"`
+		Data           map[string]any `nbt:"data,omitempty"`
+	}
+	err := nbt.Unmarshal(requiredItemList, &m)
+	if err != nil {
+		return nil
+		panic(err)
+	}
+
+	for name, data := range m {
+		rid := int32(data.RuntimeID)
+		if name == "minecraft:air" {
+			airRID = &rid
+		}
+
+		entry := ItemEntry{
+			Name:           name,
+			RuntimeID:      int16(data.RuntimeID),
+			ComponentBased: data.ComponentBased,
+		}
+		itemNamesToRuntimeIDs[name] = rid
+		itemRuntimeIDsToNames[rid] = name
+		//if data.Version != nil {
+		//	itemRuntimeIDToVersion[rid] = *data.Version
+		//	entry.Version = *data.Version
+		//}
+		if data.Data != nil {
+			var nbtData map[string]any = data.Data
+			//nbtBytes, err := base64.StdEncoding.DecodeString(data.Data)
+			//if err != nil {
+			//	panic(err)
+			//}
+			//if err := nbt.Unmarshal(nbtBytes, &nbtData); err != nil {
+			//	panic(err)
+			//}
+			itemRuntimeIDToData[rid] = nbtData
+			entry.Data = nbtData
+		}
+		itemEntries = append(itemEntries, entry)
+	}
+
+	if airRID == nil {
+		panic("couldn't find air")
+	}
+
+	return &DefaultItemMapping{itemRuntimeIDsToNames: itemRuntimeIDsToNames, itemNamesToRuntimeIDs: itemNamesToRuntimeIDs, itemRuntimeIDToVersion: itemRuntimeIDToVersion, airRID: *airRID, itemVersion: itemVersion, itemRuntimeIDToData: itemRuntimeIDToData, itemEntries: itemEntries}
+}
+
 func (m *DefaultItemMapping) ItemRuntimeIDToName(runtimeID int32) (name string, found bool) {
 	defer m.mu.Unlock()
 	m.mu.Lock()

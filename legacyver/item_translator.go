@@ -463,6 +463,10 @@ func (t *DefaultItemTranslator) DowngradeItemPackets(pks []packet.Packet, _ *min
 
 				pk.Items[i] = creativeItem
 			}
+			for i, group := range pk.Groups {
+				group.Icon = t.DowngradeItemStack(group.Icon)
+				pk.Groups[i] = group
+			}
 		case *packet.InventoryTransaction:
 			for i, action := range pk.Actions {
 				action.OldItem = t.DowngradeItemInstance(action.OldItem)

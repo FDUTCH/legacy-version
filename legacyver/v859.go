@@ -14,7 +14,7 @@ const (
 )
 
 var (
-	//go:embed data/dragonfly_items.json
+	//go:embed data/dragonfly_items.nbt
 	dragonflyLatestItemList []byte
 	//go:embed data/required_item_list_859.json
 	requiredItemList859 []byte
@@ -22,7 +22,7 @@ var (
 	blockStateData859 []byte
 
 	itemMappingLatestPocketMine = mapping.NewItemMapping(requiredItemList859, ItemVersion859)
-	itemMappingLatestDragonfly  = mapping.NewItemMapping(dragonflyLatestItemList, ItemVersion859)
+	itemMappingLatestDragonfly  = mapping.NewDFItemMapping(dragonflyLatestItemList, ItemVersion859)
 	blockMappingLatest          = mapping.NewBlockMapping(blockStateData859)
 )
 
