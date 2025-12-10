@@ -24,7 +24,7 @@ require (
 	github.com/df-mc/jsonc v1.0.5 // indirect
 	github.com/go-jose/go-jose/v4 v4.1.3 // indirect
 	github.com/golang/snappy v1.0.0 // indirect
-	github.com/klauspost/compress v1.18.1 // indirect
+	github.com/klauspost/compress v1.18.2 // indirect
 	github.com/muhammadmuzzammil1998/jsonc v1.0.0 // indirect
 	github.com/sandertv/go-raknet v1.14.3-0.20250305181847-6af3e95113d6 // indirect
 	golang.org/x/crypto v0.43.0 // indirect
@@ -32,3 +32,5 @@ require (
 	golang.org/x/net v0.46.0 // indirect
 	golang.org/x/text v0.30.0 // indirect
 )
+
+replace github.com/sandertv/gophertunnel => github.com/cooldogedev/gophertunnel v0.0.0-20251210050513-6e8700778c34

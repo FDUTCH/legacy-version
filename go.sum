@@ -8,6 +8,8 @@ github.com/cooldogedev/gophertunnel v0.0.0-20250805131657-cc74f1797ff7 h1:IvKtI+
 github.com/cooldogedev/gophertunnel v0.0.0-20250805131657-cc74f1797ff7/go.mod h1:lmRarAmn25V/+QeiUbUDXeA26bEaNlX1wGEM/rj39ew=
 github.com/cooldogedev/gophertunnel v0.0.0-20250806215416-758d5047d822 h1:cW4FrZUxjdJBoSD3Fpw7Z86LQJHtTK7o9lIgGXuaZ3Q=
 github.com/cooldogedev/gophertunnel v0.0.0-20250806215416-758d5047d822/go.mod h1:lmRarAmn25V/+QeiUbUDXeA26bEaNlX1wGEM/rj39ew=
+github.com/cooldogedev/gophertunnel v0.0.0-20251210050513-6e8700778c34 h1:ZsWaF1vhNuTw7RnA6g4xQ7mN25KdQeaKO+8GOXkS0SI=
+github.com/cooldogedev/gophertunnel v0.0.0-20251210050513-6e8700778c34/go.mod h1:IhLg93aMPY/rKgB7lKxTzOZ6i11OgkL0WinVs+gMvlI=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/df-mc/dragonfly v0.9.20-0.20241229163702-cc7e4ee0e3ce h1:mhBn/ezojzACPHeg+Y9NnU2bbYCozx27RgpfWUPw4i0=
@@ -57,6 +59,8 @@ github.com/klauspost/compress v1.18.0 h1:c/Cqfb0r+Yi+JtIEq73FWXVkRonBlf0CRNYc8Zt
 github.com/klauspost/compress v1.18.0/go.mod h1:2Pp+KzxcywXVXMr50+X0Q/Lsb43OQHYWRCY2AiWywWQ=
 github.com/klauspost/compress v1.18.1 h1:bcSGx7UbpBqMChDtsF28Lw6v/G94LPrrbMbdC3JH2co=
 github.com/klauspost/compress v1.18.1/go.mod h1:ZQFFVG+MdnR0P+l6wpXgIL4NTtwiKIdBnrBd8Nrxr+0=
+github.com/klauspost/compress v1.18.2 h1:iiPHWW0YrcFgpBYhsA6D1+fqHssJscY/Tm/y2Uqnapk=
+github.com/klauspost/compress v1.18.2/go.mod h1:R0h/fSBs8DE4ENlcrlib3PsXS61voFxhIs2DeRhCvJ4=
 github.com/muhammadmuzzammil1998/jsonc v1.0.0 h1:8o5gBQn4ZA3NBA9DlTujCj2a4w0tqWrPVjDwhzkgTIs=
 github.com/muhammadmuzzammil1998/jsonc v1.0.0/go.mod h1:saF2fIVw4banK0H4+/EuqfFLpRnoy5S+ECwTOCcRcSU=
 github.com/onsi/ginkgo v1.6.0/go.mod h1:lLunBs/Ym6LB5Z9jYTR76FiuTmxDTDusOGeTQH+WWjE=
