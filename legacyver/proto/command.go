@@ -211,3 +211,52 @@ func (x *ChainedSubcommandValue) FromLatest(latest protocol.ChainedSubcommandVal
 	x.Value = latest.Value
 	return *x
 }
+
+var commandOrigins = []string{
+	protocol.CommandOriginPlayer,
+	protocol.CommandOriginBlock,
+	protocol.CommandOriginMinecartBlock,
+	protocol.CommandOriginDevConsole,
+	protocol.CommandOriginTest,
+	protocol.CommandOriginAutomationPlayer,
+	protocol.CommandOriginClientAutomation,
+	protocol.CommandOriginDedicatedServer,
+	protocol.CommandOriginEntity,
+	protocol.CommandOriginVirtual,
+	protocol.CommandOriginGameArgument,
+	protocol.CommandOriginEntityServer,
+	protocol.CommandOriginPrecompiled,
+	protocol.CommandOriginGameDirectorEntityServer,
+	protocol.CommandOriginScript,
+	protocol.CommandOriginExecutor,
+}
+
+func commandOriginFromLegacy(legacy uint32) string {
+	if int(legacy) < len(commandOrigins) {
+		return commandOrigins[legacy]
+	}
+	return protocol.CommandOriginPlayer
+}
+
+func commandOriginToLegacy(origin string) uint32 {
+	for k, v := range commandOrigins {
+		if v == origin {
+			return uint32(k)
+		}
+	}
+	return 0 // Default to player.
+}
+
+// CommandOriginData reads/writes a CommandOrigin x using IO r.
+func CommandOriginData(r protocol.IO, x *protocol.CommandOrigin) {
+	if IsProtoGTE(r, ID898) {
+		r.String(&x.Origin)
+	} else {
+		v := commandOriginToLegacy(x.Origin)
+		r.Varuint32(&v)
+		x.Origin = commandOriginFromLegacy(v)
+	}
+	r.UUID(&x.UUID)
+	r.String(&x.RequestID)
+	r.Int64(&x.PlayerUniqueID)
+}

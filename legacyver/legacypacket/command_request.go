@@ -31,7 +31,7 @@ func (*CommandRequest) ID() uint32 {
 
 func (pk *CommandRequest) Marshal(io protocol.IO) {
 	io.String(&pk.CommandLine)
-	protocol.CommandOriginData(io, &pk.CommandOrigin)
+	proto.CommandOriginData(io, &pk.CommandOrigin)
 	io.Bool(&pk.Internal)
 	if proto.IsProtoGTE(io, proto.ID898) {
 		io.String(&pk.Version)
