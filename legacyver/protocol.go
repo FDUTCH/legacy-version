@@ -1407,6 +1407,13 @@ func (p *Protocol) upgradePackets(pks []packet.Packet, conn *minecraft.Conn) []p
 				OutputMessages: pk.OutputMessages,
 				DataSet:        pk.DataSet,
 			}
+		case *legacypacket.CommandRequest:
+			pks[pkIndex] = &packet.CommandRequest{
+				CommandLine:   pk.CommandLine,
+				CommandOrigin: pk.CommandOrigin,
+				Internal:      pk.Internal,
+				Version:       pk.Version,
+			}
 		case *legacypacket.Event:
 			pks[pkIndex] = &packet.Event{
 				EntityRuntimeID: pk.EntityRuntimeID,
