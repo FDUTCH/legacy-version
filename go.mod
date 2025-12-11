@@ -33,4 +33,4 @@ require (
 	golang.org/x/text v0.30.0 // indirect
 )
 
-replace github.com/sandertv/gophertunnel => github.com/cooldogedev/gophertunnel v0.0.0-20251210050513-6e8700778c34
+replace github.com/sandertv/gophertunnel => ../../venitydf/gophertunnel

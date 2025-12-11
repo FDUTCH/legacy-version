@@ -73,6 +73,7 @@ func (pk *Text) Marshal(io protocol.IO) {
 			categoryType = protocol.TextCategoryMessageWithParameters
 		}
 		io.TextCategory(&categoryType)
+		io.Uint8(&pk.TextType)
 	}
 	switch pk.TextType {
 	case TextTypeChat, TextTypeWhisper, TextTypeAnnouncement:
@@ -84,6 +85,11 @@ func (pk *Text) Marshal(io protocol.IO) {
 		io.String(&pk.Message)
 		protocol.FuncSlice(io, &pk.Parameters, io.String)
 	}
+	if proto.IsProtoGTE(io, proto.ID898) {
+		if len(pk.Message) == 0 {
+			io.InvalidValue(pk.Message, "message", "string cannot be empty")
+		}
+	}
 	io.String(&pk.XUID)
 	io.String(&pk.PlatformChatID)
 	if proto.IsProtoGTE(io, proto.ID685) {
@@ -92,7 +98,11 @@ func (pk *Text) Marshal(io protocol.IO) {
 		} else {
 			v, _ := pk.FilteredMessage.Value()
 			io.String(&v)
-			pk.FilteredMessage = protocol.Option(v)
+			if v != "" {
+				pk.FilteredMessage = protocol.Option(v)
+			} else {
+				pk.FilteredMessage = protocol.Optional[string]{}
+			}
 		}
 	}
 }

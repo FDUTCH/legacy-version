@@ -52,7 +52,11 @@ func (pk *CommandOutput) Marshal(io protocol.IO) {
 	} else {
 		v, _ := pk.DataSet.Value()
 		io.String(&v)
-		pk.DataSet = protocol.Option(v)
+		if v != "" {
+			pk.DataSet = protocol.Option(v)
+		} else {
+			pk.DataSet = protocol.Optional[string]{}
+		}
 	}
 }
 
