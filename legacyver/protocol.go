@@ -796,11 +796,15 @@ func (p *Protocol) downgradePackets(pks []packet.Packet, conn *minecraft.Conn) [
 				Constraints:             pk.Constraints,
 			}
 		case *packet.CommandOutput:
+			outputMessages := make([]proto.CommandOutputMessage, len(pk.OutputMessages))
+			for i, outputMessage := range pk.OutputMessages {
+				outputMessages[i] = (&proto.CommandOutputMessage{}).FromLatest(outputMessage)
+			}
 			pks[pkIndex] = &legacypacket.CommandOutput{
 				CommandOrigin:  pk.CommandOrigin,
 				OutputType:     pk.OutputType,
 				SuccessCount:   pk.SuccessCount,
-				OutputMessages: pk.OutputMessages,
+				OutputMessages: outputMessages,
 				DataSet:        pk.DataSet,
 			}
 		case *packet.CommandRequest:
@@ -1397,11 +1401,15 @@ func (p *Protocol) upgradePackets(pks []packet.Packet, conn *minecraft.Conn) []p
 				Constraints:             pk.Constraints,
 			}
 		case *legacypacket.CommandOutput:
+			outputMessages := make([]protocol.CommandOutputMessage, len(pk.OutputMessages))
+			for i, outputMessage := range pk.OutputMessages {
+				outputMessages[i] = outputMessage.ToLatest()
+			}
 			pks[pkIndex] = &packet.CommandOutput{
 				CommandOrigin:  pk.CommandOrigin,
 				OutputType:     pk.OutputType,
 				SuccessCount:   pk.SuccessCount,
-				OutputMessages: pk.OutputMessages,
+				OutputMessages: outputMessages,
 				DataSet:        pk.DataSet,
 			}
 		case *legacypacket.CommandRequest:

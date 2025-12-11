@@ -295,3 +295,20 @@ func (x *CommandOutputMessage) Marshal(r protocol.IO) {
 	r.Bool(&x.Success)
 	protocol.FuncSlice(r, &x.Parameters, r.String)
 }
+
+// ToLatest ...
+func (x *CommandOutputMessage) ToLatest() protocol.CommandOutputMessage {
+	return protocol.CommandOutputMessage{
+		Success:    x.Success,
+		Message:    x.Message,
+		Parameters: x.Parameters,
+	}
+}
+
+// FromLatest ...
+func (x *CommandOutputMessage) FromLatest(latest protocol.CommandOutputMessage) CommandOutputMessage {
+	x.Success = latest.Success
+	x.Message = latest.Message
+	x.Parameters = latest.Parameters
+	return *x
+}
