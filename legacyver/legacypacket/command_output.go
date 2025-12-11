@@ -26,7 +26,7 @@ type CommandOutput struct {
 	SuccessCount uint32
 	// OutputMessages is a list of all output messages that should be sent to the player. Whether they are
 	// shown or not, depends on the type of the messages.
-	OutputMessages []protocol.CommandOutputMessage
+	OutputMessages []proto.CommandOutputMessage
 	// DataSet ... TODO: Find out what this is for.
 	DataSet protocol.Optional[string]
 }
