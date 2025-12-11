@@ -39,7 +39,7 @@ func (c *Command) Marshal(r protocol.IO) {
 	if IsProtoGTE(r, ID898) {
 		r.String(&c.PermissionLevel)
 	} else {
-		permLevel := uint8(0)
+		permLevel := byte(0)
 		r.Uint8(&permLevel)
 		c.PermissionLevel = "any"
 	}
