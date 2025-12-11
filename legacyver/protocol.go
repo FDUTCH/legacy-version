@@ -1305,7 +1305,7 @@ func (p *Protocol) upgradePackets(pks []packet.Packet, conn *minecraft.Conn) []p
 			pks[pkIndex] = &packet.UpdateAbilities{AbilityData: pk.AbilityData.ToLatest()}
 		case *legacypacket.ClientMovementPredictionSync:
 			pks[pkIndex] = &packet.ClientMovementPredictionSync{
-				ActorFlags:              fitBitset(pk.ActorFlags, proto.EntityDataFlagsLength(p.ID())),
+				ActorFlags:              fitBitset(pk.ActorFlags, protocol.EntityDataFlagCount),
 				BoundingBoxScale:        pk.BoundingBoxScale,
 				BoundingBoxWidth:        pk.BoundingBoxWidth,
 				BoundingBoxHeight:       pk.BoundingBoxHeight,
