@@ -36,21 +36,9 @@ func (pk *Animate) Marshal(io protocol.IO) {
 		io.Varint32(&v)
 		pk.ActionType = uint8(v)
 	}
-	defaultRowingTime := float32(0)
 	io.Varuint64(&pk.EntityRuntimeID)
-	if proto.IsProtoGTE(io, proto.ID859) {
+	if proto.IsProtoGTE(io, proto.ID859) || (pk.ActionType == 128 || pk.ActionType == 127) {
 		io.Float32(&pk.Data)
-		if proto.IsProtoLT(io, proto.ID898) {
-			const (
-				animateActionRowRight = 128
-				animateActionRowLeft  = 129
-			)
-			if pk.ActionType == animateActionRowLeft || pk.ActionType == animateActionRowRight {
-				io.Float32(&defaultRowingTime)
-			}
-		}
-	} else if proto.IsProtoLT(io, proto.ID898) && pk.ActionType&0x80 != 0 {
-		io.Float32(&defaultRowingTime)
 	}
 	if proto.IsProtoGTE(io, proto.ID898) {
 		protocol.OptionalFunc(io, &pk.SwingSource, io.String)
