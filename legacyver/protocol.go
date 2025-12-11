@@ -702,10 +702,7 @@ func (p *Protocol) downgradePackets(pks []packet.Packet, conn *minecraft.Conn) [
 		case *packet.PlayerSkin:
 			pk.Skin.GeometryDataEngineVersion = []byte(p.Ver())
 		case *packet.ClientMovementPredictionSync:
-			actorFlags := pk.ActorFlags
-			if p.ID() < proto.ID786 {
-				actorFlags = fitBitset(actorFlags, 120)
-			}
+			actorFlags := fitBitset(pk.ActorFlags, proto.EntityDataFlagsLength(p.ID()))
 			pks[pkIndex] = &legacypacket.ClientMovementPredictionSync{
 				ActorFlags:              actorFlags,
 				BoundingBoxScale:        pk.BoundingBoxScale,
@@ -1308,7 +1305,7 @@ func (p *Protocol) upgradePackets(pks []packet.Packet, conn *minecraft.Conn) []p
 			pks[pkIndex] = &packet.UpdateAbilities{AbilityData: pk.AbilityData.ToLatest()}
 		case *legacypacket.ClientMovementPredictionSync:
 			pks[pkIndex] = &packet.ClientMovementPredictionSync{
-				ActorFlags:              fitBitset(pk.ActorFlags, protocol.EntityDataFlagCount),
+				ActorFlags:              fitBitset(pk.ActorFlags, proto.EntityDataFlagsLength(p.ID())),
 				BoundingBoxScale:        pk.BoundingBoxScale,
 				BoundingBoxWidth:        pk.BoundingBoxWidth,
 				BoundingBoxHeight:       pk.BoundingBoxHeight,

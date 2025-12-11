@@ -48,19 +48,7 @@ func (*ClientMovementPredictionSync) ID() uint32 {
 }
 
 func (pk *ClientMovementPredictionSync) Marshal(io protocol.IO) {
-	var bitsetSize int
-	if proto.IsProtoGTE(io, proto.ID898) {
-		bitsetSize = 127
-	} else if proto.IsProtoGTE(io, proto.ID844) {
-		bitsetSize = 126
-	} else if proto.IsProtoGTE(io, proto.ID818) {
-		bitsetSize = 125
-	} else if proto.IsProtoGTE(io, proto.ID786) {
-		bitsetSize = 123
-	} else {
-		bitsetSize = 120
-	}
-	io.Bitset(&pk.ActorFlags, bitsetSize)
+	io.Bitset(&pk.ActorFlags, proto.EntityDataFlagsLength(proto.FetchProtoID(io)))
 	io.Float32(&pk.BoundingBoxScale)
 	io.Float32(&pk.BoundingBoxWidth)
 	io.Float32(&pk.BoundingBoxHeight)
