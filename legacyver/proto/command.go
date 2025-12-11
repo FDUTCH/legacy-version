@@ -291,8 +291,6 @@ func (x *CommandOutputMessage) Marshal(r protocol.IO) {
 	if IsProtoGTE(r, ID898) {
 		r.Bool(&x.Success)
 	}
-
-	r.Bool(&x.Success)
 	protocol.FuncSlice(r, &x.Parameters, r.String)
 }
 
