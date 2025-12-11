@@ -37,7 +37,7 @@ func (*CommandOutput) ID() uint32 {
 }
 
 func (pk *CommandOutput) Marshal(io protocol.IO) {
-	protocol.CommandOriginData(io, &pk.CommandOrigin)
+	proto.CommandOriginData(io, &pk.CommandOrigin)
 	if proto.IsProtoGTE(io, proto.ID898) {
 		io.String(&pk.OutputType)
 	} else {
