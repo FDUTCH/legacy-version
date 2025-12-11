@@ -40,16 +40,17 @@ func (pk *CommandOutput) Marshal(io protocol.IO) {
 	proto.CommandOriginData(io, &pk.CommandOrigin)
 	if proto.IsProtoGTE(io, proto.ID898) {
 		io.String(&pk.OutputType)
+		io.Uint32(&pk.SuccessCount)
 	} else {
 		v := getLegacyCommandOutputType(pk.OutputType)
 		io.Uint8(&v)
 		pk.OutputType = getLatestCommandOutputType(v)
+		io.Varuint32(&pk.SuccessCount)
 	}
-	io.Uint32(&pk.SuccessCount)
 	protocol.Slice(io, &pk.OutputMessages)
 	if proto.IsProtoGTE(io, proto.ID898) {
 		protocol.OptionalFunc(io, &pk.DataSet, io.String)
-	} else {
+	} else if pk.OutputType == "dataset" {
 		v, _ := pk.DataSet.Value()
 		io.String(&v)
 		if v != "" {
