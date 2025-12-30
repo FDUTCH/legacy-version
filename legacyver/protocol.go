@@ -430,6 +430,7 @@ func (p *Protocol) downgradePackets(pks []packet.Packet, conn *minecraft.Conn) [
 				OnGround:               pk.OnGround,
 				Tick:                   pk.Tick,
 			}
+			return nil
 		case *packet.Disconnect:
 			pks[pkIndex] = &legacypacket.Disconnect{
 				Reason:                  pk.Reason,
@@ -622,7 +623,6 @@ func (p *Protocol) downgradePackets(pks []packet.Packet, conn *minecraft.Conn) [
 			for i, it := range pk.Items {
 				items[i] = (&proto.ItemEntry{}).FromLatest(it)
 			}
-
 			items = p.itemTranslator.DowngradeItemEntries(items)
 
 			if p.ID() < proto.ID776 {
@@ -634,10 +634,7 @@ func (p *Protocol) downgradePackets(pks []packet.Packet, conn *minecraft.Conn) [
 					return []packet.Packet{}
 				}
 			}
-
-			pks[pkIndex] = &legacypacket.ItemRegistry{
-				Items: items,
-			}
+			pks[pkIndex] = &legacypacket.ItemRegistry{Items: items}
 		case *packet.StructureBlockUpdate:
 			pks[pkIndex] = &legacypacket.StructureBlockUpdate{
 				Position:              pk.Position,
@@ -770,7 +767,7 @@ func (p *Protocol) downgradePackets(pks []packet.Packet, conn *minecraft.Conn) [
 				ActionType:      pk.ActionType,
 				EntityRuntimeID: pk.EntityRuntimeID,
 				Data:            pk.Data,
-				SwingSource:     pk.SwingSource,
+				SwingSource:     protocol.Option(swingSourceToString(pk.SwingSource)),
 			}
 		case *packet.AvailableCommands:
 			commands := make([]proto.Command, len(pk.Commands))
@@ -1371,11 +1368,31 @@ func (p *Protocol) upgradePackets(pks []packet.Packet, conn *minecraft.Conn) []p
 				GameRules: pk.GameRules,
 			}
 		case *legacypacket.Animate:
+			newSwingSource := packet.AnimateSwingSourceNone
+			source, _ := pk.SwingSource.Value()
+			switch source {
+			case "build":
+				newSwingSource = packet.AnimateSwingSourceBuild
+			case "mine":
+				newSwingSource = packet.AnimateSwingSourceMine
+			case "interact":
+				newSwingSource = packet.AnimateSwingSourceInteract
+			case "attack":
+				newSwingSource = packet.AnimateSwingSourceAttack
+			case "useitem":
+				newSwingSource = packet.AnimateSwingSourceUseItem
+			case "throwitem":
+				newSwingSource = packet.AnimateSwingSourceThrowItem
+			case "dropitem":
+				newSwingSource = packet.AnimateSwingSourceDropItem
+			case "event":
+				newSwingSource = packet.AnimateSwingSourceEvent
+			}
 			pks[pkIndex] = &packet.Animate{
 				ActionType:      pk.ActionType,
 				EntityRuntimeID: pk.EntityRuntimeID,
 				Data:            pk.Data,
-				SwingSource:     pk.SwingSource,
+				SwingSource:     uint8(newSwingSource),
 			}
 		case *legacypacket.AvailableCommands:
 			enums := make([]protocol.CommandEnum, len(pk.Enums))
@@ -1434,4 +1451,29 @@ func (p *Protocol) upgradePackets(pks []packet.Packet, conn *minecraft.Conn) []p
 		}
 	}
 	return pks
+}
+
+func swingSourceToString(x uint8) string {
+	switch x {
+	case packet.AnimateSwingSourceNone:
+		return "none"
+	case packet.AnimateSwingSourceBuild:
+		return "build"
+	case packet.AnimateSwingSourceMine:
+		return "mine"
+	case packet.AnimateSwingSourceInteract:
+		return "interact"
+	case packet.AnimateSwingSourceAttack:
+		return "attack"
+	case packet.AnimateSwingSourceUseItem:
+		return "useitem"
+	case packet.AnimateSwingSourceThrowItem:
+		return "throwitem"
+	case packet.AnimateSwingSourceDropItem:
+		return "dropitem"
+	case packet.AnimateSwingSourceEvent:
+		return "event"
+	default:
+		return "unknown"
+	}
 }

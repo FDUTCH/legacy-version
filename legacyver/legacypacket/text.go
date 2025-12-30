@@ -72,7 +72,7 @@ func (pk *Text) Marshal(io protocol.IO) {
 		} else {
 			categoryType = packet.TextCategoryMessageWithParameters
 		}
-		io.TextCategory(&categoryType)
+		io.Uint8(&categoryType)
 		io.Uint8(&pk.TextType)
 	}
 	switch pk.TextType {
