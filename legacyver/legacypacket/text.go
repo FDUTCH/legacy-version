@@ -66,11 +66,11 @@ func (pk *Text) Marshal(io protocol.IO) {
 	if proto.IsProtoGTE(io, proto.ID898) {
 		var categoryType uint8
 		if pk.TextType == TextTypeRaw || pk.TextType == TextTypeTip || pk.TextType == TextTypeSystem || pk.TextType == TextTypeObjectWhisper || pk.TextType == TextTypeObjectAnnouncement || pk.TextType == TextTypeObject {
-			categoryType = protocol.TextCategoryMessageOnly
+			categoryType = packet.TextCategoryMessageOnly
 		} else if pk.TextType == TextTypeChat || pk.TextType == TextTypeWhisper || pk.TextType == TextTypeAnnouncement {
-			categoryType = protocol.TextCategoryAuthoredMessage
+			categoryType = packet.TextCategoryAuthoredMessage
 		} else {
-			categoryType = protocol.TextCategoryMessageWithParameters
+			categoryType = packet.TextCategoryMessageWithParameters
 		}
 		io.TextCategory(&categoryType)
 		io.Uint8(&pk.TextType)
