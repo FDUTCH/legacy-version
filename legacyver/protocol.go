@@ -430,7 +430,6 @@ func (p *Protocol) downgradePackets(pks []packet.Packet, conn *minecraft.Conn) [
 				OnGround:               pk.OnGround,
 				Tick:                   pk.Tick,
 			}
-			return nil
 		case *packet.Disconnect:
 			pks[pkIndex] = &legacypacket.Disconnect{
 				Reason:                  pk.Reason,
