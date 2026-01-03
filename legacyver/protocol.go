@@ -154,6 +154,7 @@ type Protocol struct {
 
 	blockTranslator BlockTranslator
 	itemTranslator  ItemTranslator
+	Items           []protocol.ItemEntry
 }
 
 func (p *Protocol) Ver() string {
@@ -533,8 +534,8 @@ func (p *Protocol) downgradePackets(pks []packet.Packet, conn *minecraft.Conn) [
 			pk.GameVersion = p.ver
 			pk.BaseGameVersion = p.ver
 
-			items := make([]proto.LegacyItemRegistryEntry, len(conn.GameData().Items))
-			for i, it := range conn.GameData().Items {
+			items := make([]proto.LegacyItemRegistryEntry, len(p.Items))
+			for i, it := range p.Items {
 				items[i] = (&proto.LegacyItemRegistryEntry{}).FromLatest(it)
 			}
 
@@ -628,6 +629,7 @@ func (p *Protocol) downgradePackets(pks []packet.Packet, conn *minecraft.Conn) [
 				CodeStatus: pk.CodeStatus,
 			}
 		case *packet.ItemRegistry:
+			p.Items = pk.Items
 			items := make([]proto.ItemEntry, len(pk.Items))
 			for i, it := range pk.Items {
 				items[i] = (&proto.ItemEntry{}).FromLatest(it)
