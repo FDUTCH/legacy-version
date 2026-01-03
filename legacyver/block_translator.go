@@ -34,7 +34,7 @@ type BlockTranslator interface {
 	// UpgradeBlockPackets upgrades the input block packets to the latest block packets.
 	UpgradeBlockPackets([]packet.Packet, *minecraft.Conn) (result []packet.Packet)
 	// DowngradeLevelChunk downgrades the given LevelChunk packet to a legacy format.
-	DowngradeLevelChunk(*packet.LevelChunk, *minecraft.Conn) error
+	DowngradeLevelChunk(*packet.LevelChunk) error
 	// BlockMapping returns the block mapping used by this translator.
 	BlockMapping() mapping.Block
 }
@@ -58,7 +58,7 @@ func (t *DefaultBlockTranslator) BlockMapping() mapping.Block {
 	return t.mapping
 }
 
-func (t *DefaultBlockTranslator) DowngradeLevelChunk(pk *packet.LevelChunk, conn *minecraft.Conn) error {
+func (t *DefaultBlockTranslator) DowngradeLevelChunk(pk *packet.LevelChunk) error {
 	count := int(pk.SubChunkCount)
 	if count == protocol.SubChunkRequestModeLimitless || count == protocol.SubChunkRequestModeLimited {
 		return nil
@@ -67,11 +67,11 @@ func (t *DefaultBlockTranslator) DowngradeLevelChunk(pk *packet.LevelChunk, conn
 	buf := bytes.NewBuffer(pk.RawPayload)
 	writeBuf := bytes.NewBuffer(nil)
 	if !pk.CacheEnabled {
-		c, err := chunk.NetworkDecode(t.latest.Air(), buf, count, false, t.getRange(conn), LatestNetworkPersistentEncoding, LatestBlockPaletteEncoding, t.latest, t.UseBlockNetworkIDHashes)
+		c, err := chunk.NetworkDecode(t.latest.Air(), buf, count, false, t.getRange(), LatestNetworkPersistentEncoding, LatestBlockPaletteEncoding, t.latest, t.UseBlockNetworkIDHashes)
 		if err != nil {
 			return err
 		}
-		c = t.DowngradeChunk(c, conn)
+		c = t.DowngradeChunk(c)
 
 		payload, err := chunk.NetworkEncode(t.mapping.Air(), c, t.oldFormat, t.pe, t.mapping, false)
 		if err != nil {
@@ -119,7 +119,7 @@ func (t *DefaultBlockTranslator) DowngradeBlockPackets(pks []packet.Packet, conn
 			if !EnableChunkTranslation {
 				break
 			}
-			if err := t.DowngradeLevelChunk(pk, conn); err != nil {
+			if err := t.DowngradeLevelChunk(pk); err != nil {
 				//fmt.Println(err)
 				break
 			}
@@ -127,7 +127,7 @@ func (t *DefaultBlockTranslator) DowngradeBlockPackets(pks []packet.Packet, conn
 			if !EnableChunkTranslation {
 				break
 			}
-			r := t.getRange(conn)
+			r := t.getRange()
 			if t.oldFormat {
 				r = cube.Range{0, 255}
 			}
@@ -167,7 +167,7 @@ func (t *DefaultBlockTranslator) DowngradeBlockPackets(pks []packet.Packet, conn
 				}
 			}
 		case *packet.ClientCacheMissResponse:
-			r := t.getRange(conn)
+			r := t.getRange()
 			if t.oldFormat {
 				r = cube.Range{0, 255}
 			}
@@ -299,13 +299,13 @@ func (t *DefaultBlockTranslator) DowngradeBlockRuntimeID(input uint32) uint32 {
 	return runtimeID
 }
 
-func (t *DefaultBlockTranslator) DowngradeChunk(input *chunk.Chunk, conn *minecraft.Conn) *chunk.Chunk {
+func (t *DefaultBlockTranslator) DowngradeChunk(input *chunk.Chunk) *chunk.Chunk {
 	if t.latest == t.mapping {
 		return input
 	}
 
 	start := 0
-	r := t.getRange(conn)
+	r := t.getRange()
 	if t.oldFormat {
 		start = 4
 		r = cube.Range{0, 255}
@@ -390,7 +390,7 @@ func (t *DefaultBlockTranslator) upgradeEntityMetadata(metadata map[uint32]any) 
 	return metadata
 }
 
-func (t *DefaultBlockTranslator) getRange(conn *minecraft.Conn) (r cube.Range) {
+func (t *DefaultBlockTranslator) getRange() (r cube.Range) {
 	var dimName string
 	switch t.currentDimension {
 	case 0:

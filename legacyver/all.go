@@ -64,7 +64,7 @@ func lookupOrCreateBlockTranslator(protocolVersion, blockVersion int32, blockSta
 }
 
 // DowngradeLevelChunkPacket downgrades the given level chunk packet to the specified protocol version.
-func DowngradeLevelChunkPacket(protocolVersion int32, pk *packet.LevelChunk, conn *minecraft.Conn) error {
+func DowngradeLevelChunkPacket(protocolVersion int32, pk *packet.LevelChunk) error {
 	blockTranslatorsMu.RLock()
 	translator, ok := blockTranslators[protocolVersion]
 	blockTranslatorsMu.RUnlock()
@@ -72,5 +72,5 @@ func DowngradeLevelChunkPacket(protocolVersion int32, pk *packet.LevelChunk, con
 		return fmt.Errorf("no block translator found for protocol version %d", protocolVersion)
 	}
 
-	return translator.DowngradeLevelChunk(pk, conn)
+	return translator.DowngradeLevelChunk(pk)
 }
