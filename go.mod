@@ -8,6 +8,7 @@ require (
 	github.com/df-mc/worldupgrader v1.0.20
 	github.com/go-gl/mathgl v1.2.0
 	github.com/google/uuid v1.6.0
+	github.com/hashicorp/go-version v1.8.0
 	github.com/pelletier/go-toml v1.9.5
 	github.com/rogpeppe/go-internal v1.14.1
 	github.com/samber/lo v1.49.1
@@ -26,7 +27,6 @@ require (
 	github.com/getsentry/sentry-go v0.40.0 // indirect
 	github.com/go-jose/go-jose/v4 v4.1.3 // indirect
 	github.com/golang/snappy v1.0.0 // indirect
-	github.com/hashicorp/go-version v1.8.0 // indirect
 	github.com/klauspost/compress v1.18.2 // indirect
 	github.com/lumineproxy/log v0.0.0-20251025091855-37df1c504536 // indirect
 	github.com/lumineproxy/socks5udp v1.0.1-0.20251223034400-3f3b0cbbe69b // indirect
