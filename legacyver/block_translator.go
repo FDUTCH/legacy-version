@@ -275,6 +275,13 @@ func (t *DefaultBlockTranslator) DowngradeBlockRuntimeID(input uint32) uint32 {
 	if t.latest == t.mapping {
 		return input
 	}
+	if t.UseBlockNetworkIDHashes {
+		var ok bool
+		input, ok = t.latest.HashToRuntimeID(input)
+		if !ok {
+			return t.mapping.InfoUpdate()
+		}
+	}
 	state, ok := t.latest.RuntimeIDToState(input)
 	if !ok {
 		return t.mapping.InfoUpdate()
@@ -282,6 +289,12 @@ func (t *DefaultBlockTranslator) DowngradeBlockRuntimeID(input uint32) uint32 {
 	runtimeID, ok := t.mapping.StateToRuntimeID(state)
 	if !ok {
 		return t.mapping.InfoUpdate()
+	}
+	if t.UseBlockNetworkIDHashes {
+		runtimeID, ok = t.mapping.RuntimeIDToHash(runtimeID)
+		if !ok {
+			return t.mapping.InfoUpdate()
+		}
 	}
 	return runtimeID
 }
@@ -343,6 +356,13 @@ func (t *DefaultBlockTranslator) UpgradeBlockRuntimeID(input uint32) uint32 {
 	if t.latest == t.mapping {
 		return input
 	}
+	if t.UseBlockNetworkIDHashes {
+		var ok bool
+		input, ok = t.mapping.HashToRuntimeID(input)
+		if !ok {
+			return t.latest.InfoUpdate()
+		}
+	}
 	state, ok := t.mapping.RuntimeIDToState(input)
 	if !ok {
 		return t.latest.InfoUpdate()
@@ -350,6 +370,12 @@ func (t *DefaultBlockTranslator) UpgradeBlockRuntimeID(input uint32) uint32 {
 	runtimeID, ok := t.latest.StateToRuntimeID(state)
 	if !ok {
 		return t.latest.InfoUpdate()
+	}
+	if t.UseBlockNetworkIDHashes {
+		runtimeID, ok = t.latest.RuntimeIDToHash(runtimeID)
+		if !ok {
+			return t.latest.InfoUpdate()
+		}
 	}
 	return runtimeID
 }
