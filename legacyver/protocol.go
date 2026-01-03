@@ -31,6 +31,8 @@ func init() {
 
 func convertPacketFunc(pid uint32, cur func() packet.Packet) func() packet.Packet {
 	switch pid {
+	case packet.IDDimensionData:
+		return func() packet.Packet { return &legacypacket.DimensionData{} }
 	case packet.IDCameraAimAssist:
 		return func() packet.Packet { return &legacypacket.CameraAimAssist{} }
 	case packet.IDCameraPresets:
@@ -190,8 +192,14 @@ func (p *Protocol) ConvertFromLatest(pk packet.Packet, conn *minecraft.Conn) []p
 }
 
 func (p *Protocol) downgradePackets(pks []packet.Packet, conn *minecraft.Conn) []packet.Packet {
+	translator, ok := p.blockTranslator.(*DefaultBlockTranslator)
+	if !ok {
+		return pks
+	}
 	for pkIndex, pk := range pks {
 		switch pk := pk.(type) {
+		case *packet.DimensionData:
+			translator.dimensionDefinitions = pk.Definitions
 		case *packet.ClientCacheStatus:
 			// pk.Enabled = false // TODO: enable when chunk translation is not broken
 		case *packet.SetActorMotion:
@@ -414,6 +422,7 @@ func (p *Protocol) downgradePackets(pks []packet.Packet, conn *minecraft.Conn) [
 				DetachFromEntity: pk.DetachFromEntity,
 			}
 		case *packet.ChangeDimension:
+			translator.currentDimension = pk.Dimension
 			pks[pkIndex] = &legacypacket.ChangeDimension{
 				Dimension:       pk.Dimension,
 				Position:        pk.Position,
@@ -519,6 +528,7 @@ func (p *Protocol) downgradePackets(pks []packet.Packet, conn *minecraft.Conn) [
 				ClearRecipes:                 pk.ClearRecipes,
 			}
 		case *packet.StartGame:
+			translator.currentDimension = pk.Dimension
 			// Adjust game version
 			pk.GameVersion = p.ver
 			pk.BaseGameVersion = p.ver

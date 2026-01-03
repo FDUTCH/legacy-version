@@ -21,6 +21,8 @@ type Block interface {
 	DowngradeBlockActorData(map[string]any)
 	// UpgradeBlockActorData upgrades the input sub chunk to the latest block actor.
 	UpgradeBlockActorData(map[string]any)
+	HashToRuntimeID(hash uint32) (rid uint32, ok bool)
+	RuntimeIDToHash(rid uint32) (hash uint32, ok bool)
 	// Adjust adjusts the latest mappings to account for custom states.
 	Adjust([]protocol.BlockEntry)
 	Air() uint32
@@ -41,6 +43,9 @@ type DefaultBlockMapping struct {
 
 	// infoUpdateRID is the runtime ID of the info_update block in the latest version of the game.
 	infoUpdateBlockRID uint32
+
+	networkhashToRids map[uint32]uint32
+	ridsToNetworkhash map[uint32]uint32
 }
 
 func NewBlockMapping(raw []byte) *DefaultBlockMapping {
@@ -51,6 +56,8 @@ func NewBlockMapping(raw []byte) *DefaultBlockMapping {
 	runtimeIDToState := make(map[uint32]blockupgrader.BlockState)
 	var airRID *uint32
 	var infoUpdateBlockRID *uint32
+	networkhashToRids := make(map[uint32]uint32)
+	ridsToNetworkhash := make(map[uint32]uint32)
 
 	var s blockupgrader.BlockState
 	for {
@@ -67,8 +74,11 @@ func NewBlockMapping(raw []byte) *DefaultBlockMapping {
 			infoUpdateBlockRID = &rid
 		}
 
-		stateRuntimeIDs[internal.HashState(blockupgrader.Upgrade(s))] = rid
+		upgradedStates := blockupgrader.Upgrade(s)
+		stateRuntimeIDs[internal.HashState(upgradedStates)] = rid
 		runtimeIDToState[rid] = s
+		networkhashToRids[networkBlockHash(upgradedStates.Name, upgradedStates.Properties)] = rid
+		ridsToNetworkhash[rid] = networkBlockHash(s.Name, s.Properties)
 	}
 	if airRID == nil {
 		panic("couldn't find air")
@@ -83,6 +93,8 @@ func NewBlockMapping(raw []byte) *DefaultBlockMapping {
 		runtimeIDToState:   runtimeIDToState,
 		airRID:             *airRID,
 		infoUpdateBlockRID: *infoUpdateBlockRID,
+		networkhashToRids:  networkhashToRids,
+		ridsToNetworkhash:  ridsToNetworkhash,
 	}
 }
 
@@ -112,6 +124,16 @@ func (m *DefaultBlockMapping) UpgradeBlockActorData(actorData map[string]any) {
 	if m.upgrader != nil {
 		m.upgrader(actorData)
 	}
+}
+
+func (m *DefaultBlockMapping) RuntimeIDToHash(rid uint32) (uint32, bool) {
+	hash, found := m.ridsToNetworkhash[rid]
+	return hash, found
+}
+
+func (m *DefaultBlockMapping) HashToRuntimeID(hash uint32) (uint32, bool) {
+	rid, found := m.networkhashToRids[hash]
+	return rid, found
 }
 
 func (m *DefaultBlockMapping) Adjust(entries []protocol.BlockEntry) {

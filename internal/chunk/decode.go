@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 
+	"github.com/akmalfairuz/legacy-version/mapping"
 	"github.com/df-mc/dragonfly/server/block/cube"
 )
 
@@ -11,7 +12,7 @@ import (
 // returned is nil and the error non-nil.
 // The sub chunk count passed must be that found in the LevelChunk packet.
 // noinspection GoUnusedExportedFunction
-func NetworkDecode(air uint32, buf *bytes.Buffer, count int, oldFormat bool, r cube.Range, pse Encoding, pe PaletteEncoding) (*Chunk, error) {
+func NetworkDecode(air uint32, buf *bytes.Buffer, count int, oldFormat bool, r cube.Range, pse Encoding, pe PaletteEncoding, block mapping.Block, useBlockHashes bool) (*Chunk, error) {
 	var (
 		c   = New(air, r)
 		err error
@@ -21,7 +22,7 @@ func NetworkDecode(air uint32, buf *bytes.Buffer, count int, oldFormat bool, r c
 		if oldFormat {
 			index += 4
 		}
-		c.sub[index], err = DecodeSubChunk(air, r, buf, &index, NetworkEncoding, pse, pe)
+		c.sub[index], err = DecodeSubChunk(air, r, buf, &index, NetworkEncoding, pse, pe, block, useBlockHashes)
 		if err != nil {
 			return nil, err
 		}
@@ -45,7 +46,7 @@ func NetworkDecode(air uint32, buf *bytes.Buffer, count int, oldFormat bool, r c
 	} else {
 		var last *PalettedStorage
 		for i := 0; i < len(c.sub); i++ {
-			b, err := decodePalettedStorage(buf, NetworkEncoding, pse, BiomePaletteEncoding)
+			b, err := decodePalettedStorage(buf, NetworkEncoding, pse, BiomePaletteEncoding, block, false)
 			if err != nil {
 				return nil, err
 			}
@@ -68,7 +69,7 @@ func NetworkDecode(air uint32, buf *bytes.Buffer, count int, oldFormat bool, r c
 
 // DecodeSubChunk decodes a SubChunk from a bytes.Buffer. The Encoding passed defines how the block storages of the
 // SubChunk are decoded.
-func DecodeSubChunk(air uint32, r cube.Range, buf *bytes.Buffer, index *byte, e Encoding, pse Encoding, pe PaletteEncoding) (*SubChunk, error) {
+func DecodeSubChunk(air uint32, r cube.Range, buf *bytes.Buffer, index *byte, e Encoding, pse Encoding, pe PaletteEncoding, block mapping.Block, useBlockHashes bool) (*SubChunk, error) {
 	ver, err := buf.ReadByte()
 	if err != nil {
 		return nil, fmt.Errorf("error reading version: %w", err)
@@ -79,7 +80,7 @@ func DecodeSubChunk(air uint32, r cube.Range, buf *bytes.Buffer, index *byte, e 
 		return nil, fmt.Errorf("unknown sub chunk version %v: can't decode", ver)
 	case 1:
 		// Version 1 only has one layer for each sub chunk, but uses the format with palettes.
-		storage, err := decodePalettedStorage(buf, e, pse, pe)
+		storage, err := decodePalettedStorage(buf, e, pse, pe, block, useBlockHashes)
 		if err != nil {
 			return nil, err
 		}
@@ -102,7 +103,7 @@ func DecodeSubChunk(air uint32, r cube.Range, buf *bytes.Buffer, index *byte, e 
 		sub.storages = make([]*PalettedStorage, storageCount)
 
 		for i := byte(0); i < storageCount; i++ {
-			sub.storages[i], err = decodePalettedStorage(buf, e, pse, pe)
+			sub.storages[i], err = decodePalettedStorage(buf, e, pse, pe, block, useBlockHashes)
 			if err != nil {
 				return nil, err
 			}
@@ -113,7 +114,7 @@ func DecodeSubChunk(air uint32, r cube.Range, buf *bytes.Buffer, index *byte, e 
 
 // decodePalettedStorage decodes a PalettedStorage from a bytes.Buffer. The Encoding passed is used to read either a
 // network or disk block storage.
-func decodePalettedStorage(buf *bytes.Buffer, e Encoding, pse Encoding, pe PaletteEncoding) (*PalettedStorage, error) {
+func decodePalettedStorage(buf *bytes.Buffer, e Encoding, pse Encoding, pe PaletteEncoding, block mapping.Block, useBlockHashes bool) (*PalettedStorage, error) {
 	blockSize, err := buf.ReadByte()
 	if err != nil {
 		return nil, fmt.Errorf("error reading block size: %w", err)
@@ -142,5 +143,15 @@ func decodePalettedStorage(buf *bytes.Buffer, e Encoding, pse Encoding, pe Palet
 		uint32s[i] = uint32(data[i*4]) | uint32(data[i*4+1])<<8 | uint32(data[i*4+2])<<16 | uint32(data[i*4+3])<<24
 	}
 	p, err := e.DecodePalette(buf, paletteSize(blockSize), pe)
-	return newPalettedStorage(uint32s, p), err
+	if err != nil {
+		return nil, err
+	}
+	if useBlockHashes {
+		for i, hash := range p.values {
+			if rid, ok := block.HashToRuntimeID(hash); ok {
+				p.values[i] = rid
+			}
+		}
+	}
+	return newPalettedStorage(uint32s, p), nil
 }

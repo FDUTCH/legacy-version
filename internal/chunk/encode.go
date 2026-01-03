@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"sync"
 
+	"github.com/akmalfairuz/legacy-version/mapping"
 	"github.com/df-mc/dragonfly/server/block/cube"
 )
 
@@ -14,10 +15,10 @@ var pool = sync.Pool{
 	},
 }
 
-func NetworkEncode(air uint32, c *Chunk, oldFormat bool, pe PaletteEncoding) ([]byte, error) {
+func NetworkEncode(air uint32, c *Chunk, oldFormat bool, pe PaletteEncoding, block mapping.Block, useBlockHashes bool) ([]byte, error) {
 	buf := pool.Get().(*bytes.Buffer)
 	for i := 0; i < len(c.sub); i++ {
-		_, _ = buf.Write(EncodeSubChunk(c.sub[i], NetworkEncoding, pe, SubChunkVersion8, c.r, i))
+		_, _ = buf.Write(EncodeSubChunk(c.sub[i], NetworkEncoding, pe, SubChunkVersion8, c.r, i, block, useBlockHashes))
 	}
 	if oldFormat {
 		biomes := make([]byte, 256)
@@ -30,7 +31,7 @@ func NetworkEncode(air uint32, c *Chunk, oldFormat bool, pe PaletteEncoding) ([]
 		}
 		_, _ = buf.Write(biomes)
 	} else {
-		_, _ = buf.Write(EncodeBiomes(c, NetworkEncoding))
+		_, _ = buf.Write(EncodeBiomes(c, NetworkEncoding, block, useBlockHashes))
 	}
 
 	return buf.Bytes(), nil
@@ -38,7 +39,7 @@ func NetworkEncode(air uint32, c *Chunk, oldFormat bool, pe PaletteEncoding) ([]
 
 // EncodeSubChunk encodes a sub-chunk from a chunk into bytes. An Encoding may be passed to encode either for network or
 // disk purposed, the most notable difference being that the network encoding generally uses varints and no NBT.
-func EncodeSubChunk(s *SubChunk, e Encoding, pe PaletteEncoding, subChunkVer subChunkVersion, r cube.Range, ind int) []byte {
+func EncodeSubChunk(s *SubChunk, e Encoding, pe PaletteEncoding, subChunkVer subChunkVersion, r cube.Range, ind int, block mapping.Block, useBlockHashes bool) []byte {
 	buf := pool.Get().(*bytes.Buffer)
 	defer func() {
 		buf.Reset()
@@ -47,7 +48,7 @@ func EncodeSubChunk(s *SubChunk, e Encoding, pe PaletteEncoding, subChunkVer sub
 
 	subChunkVer.EncodeHeader(buf, s, r, ind)
 	for _, storage := range s.storages {
-		encodePalettedStorage(buf, storage, nil, e, pe)
+		encodePalettedStorage(buf, storage, nil, e, pe, block, useBlockHashes)
 	}
 	sub := make([]byte, buf.Len())
 	_, _ = buf.Read(sub)
@@ -56,7 +57,7 @@ func EncodeSubChunk(s *SubChunk, e Encoding, pe PaletteEncoding, subChunkVer sub
 
 // EncodeBiomes encodes the biomes of a chunk into bytes. An Encoding may be passed to encode either for network or
 // disk purposed, the most notable difference being that the network encoding generally uses varints and no NBT.
-func EncodeBiomes(c *Chunk, e Encoding) []byte {
+func EncodeBiomes(c *Chunk, e Encoding, block mapping.Block, useBlockHashes bool) []byte {
 	buf := pool.Get().(*bytes.Buffer)
 	defer func() {
 		buf.Reset()
@@ -65,7 +66,7 @@ func EncodeBiomes(c *Chunk, e Encoding) []byte {
 
 	var previous *PalettedStorage
 	for _, b := range c.biomes {
-		encodePalettedStorage(buf, b, previous, e, BiomePaletteEncoding)
+		encodePalettedStorage(buf, b, previous, e, BiomePaletteEncoding, block, useBlockHashes)
 		previous = b
 	}
 	biomes := make([]byte, buf.Len())
@@ -75,7 +76,7 @@ func EncodeBiomes(c *Chunk, e Encoding) []byte {
 
 // encodePalettedStorage encodes a PalettedStorage into a bytes.Buffer. The Encoding passed is used to write the Palette
 // of the PalettedStorage.
-func encodePalettedStorage(buf *bytes.Buffer, storage, previous *PalettedStorage, e Encoding, pe PaletteEncoding) {
+func encodePalettedStorage(buf *bytes.Buffer, storage, previous *PalettedStorage, e Encoding, pe PaletteEncoding, block mapping.Block, useBlockHashes bool) {
 	if storage.Equal(previous) {
 		_, _ = buf.Write([]byte{0x7f<<1 | e.Network()})
 		return
@@ -89,5 +90,13 @@ func encodePalettedStorage(buf *bytes.Buffer, storage, previous *PalettedStorage
 	}
 	_, _ = buf.Write(b)
 
-	e.EncodePalette(buf, storage.palette, pe)
+	palette := storage.palette
+	if useBlockHashes {
+		for i, rid := range palette.values {
+			if hash, ok := block.RuntimeIDToHash(rid); ok {
+				palette.values[i] = hash
+			}
+		}
+	}
+	e.EncodePalette(buf, palette, pe)
 }
