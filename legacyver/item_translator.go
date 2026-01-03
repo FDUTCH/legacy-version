@@ -59,11 +59,14 @@ type DefaultItemTranslator struct {
 	originalToCustom   map[int32]int32
 	customToOriginal   map[int32]int32
 	hasDebugStick      bool
+
+	infoUpdateRID int32
 }
 
 func NewItemTranslator(mapping mapping.Item, latestMapping mapping.Item, blockMapping mapping.Block, blockMappingLatest mapping.Block) *DefaultItemTranslator {
+	infoUpdateRID, _ := mapping.ItemNameToRuntimeID("minecraft:info_update")
 	return &DefaultItemTranslator{mapping: mapping, latest: latestMapping, blockMapping: blockMapping, blockMappingLatest: blockMappingLatest,
-		ridToCustomItem: make(map[int32]world.CustomItem), originalToCustom: make(map[int32]int32), customToOriginal: make(map[int32]int32)}
+		ridToCustomItem: make(map[int32]world.CustomItem), originalToCustom: make(map[int32]int32), customToOriginal: make(map[int32]int32), infoUpdateRID: infoUpdateRID}
 }
 
 func (t *DefaultItemTranslator) DowngradeItemType(input protocol.ItemType) protocol.ItemType {
@@ -102,6 +105,36 @@ func (t *DefaultItemTranslator) DowngradeItemType(input protocol.ItemType) proto
 		NetworkID:     networkID,
 		MetadataValue: metadata,
 	}
+}
+
+func (t *DefaultItemTranslator) TryDowngradeItemStack(input protocol.ItemStack) (protocol.ItemStack, bool) {
+	if t.latest == t.mapping || input.NetworkID == 0 {
+		return input, true
+	}
+	input.ItemType = t.DowngradeItemType(input.ItemType)
+	if input.ItemType.NetworkID == t.infoUpdateRID {
+		return input, false
+	}
+
+	blockRuntimeId := uint32(0)
+	if input.NetworkID != t.mapping.Air() {
+		name, _ := t.mapping.ItemRuntimeIDToName(input.NetworkID)
+		if latestBlockState, ok := item.BlockStateFromItemName(name, input.MetadataValue); ok {
+			var found bool
+			if blockRuntimeId, found = t.blockMapping.StateToRuntimeID(latestBlockState); !found {
+				blockRuntimeId = t.blockMapping.Air()
+			}
+		}
+	}
+	return protocol.ItemStack{
+		ItemType:       input.ItemType,
+		BlockRuntimeID: int32(blockRuntimeId),
+		Count:          input.Count,
+		NBTData:        input.NBTData,
+		CanBePlacedOn:  input.CanBePlacedOn,
+		CanBreak:       input.CanBreak,
+		HasNetworkID:   input.HasNetworkID,
+	}, true
 }
 
 func (t *DefaultItemTranslator) DowngradeItemStack(input protocol.ItemStack) protocol.ItemStack {
@@ -458,10 +491,17 @@ func (t *DefaultItemTranslator) DowngradeItemPackets(pks []packet.Packet, _ *min
 			}
 			pk.ItemInteractionData.HeldItem = t.DowngradeItemInstance(pk.ItemInteractionData.HeldItem)
 		case *packet.CreativeContent:
-			for i, creativeItem := range pk.Items {
-				creativeItem.Item = t.DowngradeItemStack(creativeItem.Item)
-
-				pk.Items[i] = creativeItem
+			newItems := make([]protocol.CreativeItem, 0, len(pk.Items))
+			for _, creativeItem := range pk.Items {
+				if newItem, ok := t.TryDowngradeItemStack(creativeItem.Item); ok {
+					creativeItem.Item = newItem
+					newItems = append(newItems, creativeItem)
+				}
+			}
+			pk.Items = newItems
+			for i, group := range pk.Groups {
+				group.Icon = t.DowngradeItemStack(group.Icon)
+				pk.Groups[i] = group
 			}
 		case *packet.InventoryTransaction:
 			for i, action := range pk.Actions {

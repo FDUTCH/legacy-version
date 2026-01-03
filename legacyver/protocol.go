@@ -696,16 +696,11 @@ func (p *Protocol) downgradePackets(pks []packet.Packet, conn *minecraft.Conn) [
 			}
 		case *packet.CreativeContent:
 			items := make([]proto.CreativeItem, len(pk.Items))
-			groups := make([]protocol.CreativeGroup, len(pk.Groups))
 			for i, it := range pk.Items {
 				items[i] = (&proto.CreativeItem{}).FromLatest(it)
 			}
-			for i, gr := range pk.Groups {
-				gr.Icon = p.itemTranslator.DowngradeItemStack(gr.Icon)
-				groups[i] = gr
-			}
 			pks[pkIndex] = &legacypacket.CreativeContent{
-				Groups: groups,
+				Groups: pk.Groups,
 				Items:  items,
 			}
 		case *packet.UpdateAbilities:
