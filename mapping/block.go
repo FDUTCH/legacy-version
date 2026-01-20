@@ -59,8 +59,8 @@ func NewBlockMapping(raw []byte) *DefaultBlockMapping {
 	networkhashToRids := make(map[uint32]uint32)
 	ridsToNetworkhash := make(map[uint32]uint32)
 
-	var s blockupgrader.BlockState
 	for {
+		var s blockupgrader.BlockState
 		if err := dec.Decode(&s); err != nil {
 			break
 		}
