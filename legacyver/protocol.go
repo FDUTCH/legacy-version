@@ -538,7 +538,6 @@ func (p *Protocol) downgradePackets(pks []packet.Packet, conn *minecraft.Conn) [
 			for i, it := range p.Items {
 				items[i] = (&proto.LegacyItemRegistryEntry{}).FromLatest(it)
 			}
-
 			items = p.itemTranslator.DowngradeLegacyItemRegistry(items)
 
 			pks[pkIndex] = &legacypacket.StartGame{
