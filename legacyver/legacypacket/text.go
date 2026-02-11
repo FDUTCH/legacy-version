@@ -1,6 +1,9 @@
 package legacypacket
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/akmalfairuz/legacy-version/legacyver/proto"
 	"github.com/sandertv/gophertunnel/minecraft/protocol"
 	"github.com/sandertv/gophertunnel/minecraft/protocol/packet"
@@ -73,6 +76,13 @@ func (pk *Text) Marshal(io protocol.IO) {
 			categoryType = packet.TextCategoryMessageWithParameters
 		}
 		io.Uint8(&categoryType)
+		// Protocols 898-923 include a quirky Mojang text-category string block.
+		// 924+ removed this and only keeps the uint8 category and text type.
+		if proto.IsProtoLT(io, proto.ID924) {
+			for _, v := range textCategoryConstants(categoryType) {
+				stringConst(io, v)
+			}
+		}
 		io.Uint8(&pk.TextType)
 	}
 	switch pk.TextType {
@@ -85,6 +95,7 @@ func (pk *Text) Marshal(io protocol.IO) {
 		io.String(&pk.Message)
 		protocol.FuncSlice(io, &pk.Parameters, io.String)
 	}
+	fmt.Println(pk.TextType, pk.Message, pk.SourceName)
 	if proto.IsProtoGTE(io, proto.ID898) {
 		if len(pk.Message) == 0 {
 			io.InvalidValue(pk.Message, "message", "string cannot be empty")
@@ -105,4 +116,28 @@ func (pk *Text) Marshal(io protocol.IO) {
 			}
 		}
 	}
+}
+
+func textCategoryConstants(categoryType uint8) []string {
+	switch categoryType {
+	case packet.TextCategoryMessageOnly:
+		return []string{"raw", "tip", "systemMessage", "textObjectWhisper", "textObjectAnnouncement", "textObject"}
+	case packet.TextCategoryAuthoredMessage:
+		return []string{"chat", "whisper", "announcement"}
+	default:
+		return []string{"translate", "popup", "jukeboxPopup"}
+	}
+}
+
+func stringConst(io protocol.IO, expected string) {
+	if proto.IsReader(io) {
+		var got string
+		io.String(&got)
+		if !strings.EqualFold(got, expected) {
+			io.InvalidValue(got, "text category constant", fmt.Sprintf("expected %q", expected))
+		}
+		return
+	}
+	v := expected
+	io.String(&v)
 }
