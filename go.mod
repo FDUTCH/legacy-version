@@ -21,42 +21,20 @@ require (
 
 require (
 	github.com/coreos/go-oidc/v3 v3.17.0 // indirect
-	github.com/df-mc/go-nethernet v0.0.0-20250326113854-da40ae9a1339 // indirect
 	github.com/df-mc/go-playfab v1.0.0 // indirect
 	github.com/df-mc/go-xsapi v1.0.1 // indirect
 	github.com/df-mc/goleveldb v1.1.9 // indirect
 	github.com/df-mc/jsonc v1.0.5 // indirect
-	github.com/getsentry/sentry-go v0.40.0 // indirect
 	github.com/go-jose/go-jose/v4 v4.1.3 // indirect
 	github.com/golang/snappy v1.0.0 // indirect
 	github.com/klauspost/compress v1.18.4 // indirect
-	github.com/lumineproxy/log v0.0.0-20251025091855-37df1c504536 // indirect
-	github.com/lumineproxy/socks5udp v1.0.1-0.20251223034400-3f3b0cbbe69b // indirect
-	github.com/muhammadmuzzammil1998/jsonc v1.0.0 // indirect
-	github.com/pion/datachannel v1.5.10 // indirect
-	github.com/pion/dtls/v3 v3.0.9 // indirect
-	github.com/pion/ice/v4 v4.1.0 // indirect
-	github.com/pion/interceptor v0.1.42 // indirect
-	github.com/pion/logging v0.2.4 // indirect
-	github.com/pion/mdns/v2 v2.1.0 // indirect
-	github.com/pion/randutil v0.1.0 // indirect
-	github.com/pion/rtcp v1.2.16 // indirect
-	github.com/pion/rtp v1.8.27 // indirect
-	github.com/pion/sctp v1.8.41 // indirect
-	github.com/pion/sdp/v3 v3.0.17 // indirect
-	github.com/pion/srtp/v3 v3.0.9 // indirect
-	github.com/pion/stun/v3 v3.0.2 // indirect
-	github.com/pion/transport/v3 v3.1.1 // indirect
-	github.com/pion/turn/v4 v4.1.3 // indirect
-	github.com/pion/webrtc/v4 v4.1.8 // indirect
+	github.com/onsi/ginkgo v1.16.5 // indirect
+	github.com/onsi/gomega v1.17.0 // indirect
 	github.com/sandertv/go-raknet v1.15.0 // indirect
-	github.com/thomaso-mirodin/intmath v0.0.0-20160323211736-5dc6d854e46e // indirect
-	github.com/wlynxg/anet v0.0.5 // indirect
+	github.com/stretchr/testify v1.11.1 // indirect
 	github.com/zaataylor/cartesian v0.0.0-20221028053253-3b3244d82727 // indirect
-	golang.org/x/crypto v0.48.0 // indirect
 	golang.org/x/mod v0.33.0 // indirect
 	golang.org/x/net v0.50.0 // indirect
-	golang.org/x/sys v0.41.0 // indirect
 	golang.org/x/text v0.34.0 // indirect
 )
 
