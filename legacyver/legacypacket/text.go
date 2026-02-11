@@ -95,7 +95,6 @@ func (pk *Text) Marshal(io protocol.IO) {
 		io.String(&pk.Message)
 		protocol.FuncSlice(io, &pk.Parameters, io.String)
 	}
-	fmt.Println(pk.TextType, pk.Message, pk.SourceName)
 	if proto.IsProtoGTE(io, proto.ID898) {
 		if len(pk.Message) == 0 {
 			io.InvalidValue(pk.Message, "message", "string cannot be empty")
