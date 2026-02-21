@@ -30,16 +30,10 @@ require (
 	github.com/klauspost/compress v1.18.4 // indirect
 	github.com/onsi/ginkgo v1.16.5 // indirect
 	github.com/onsi/gomega v1.17.0 // indirect
-	github.com/sandertv/go-raknet v1.15.0 // indirect
+	github.com/sandertv/go-raknet v1.15.1-0.20260112202637-beca0b10c217 // indirect
 	github.com/stretchr/testify v1.11.1 // indirect
 	github.com/zaataylor/cartesian v0.0.0-20221028053253-3b3244d82727 // indirect
 	golang.org/x/mod v0.33.0 // indirect
 	golang.org/x/net v0.50.0 // indirect
 	golang.org/x/text v0.34.0 // indirect
-)
-
-replace (
-	github.com/df-mc/dragonfly => github.com/lumineproxy/dragonfly v0.0.0-20260101232342-710c0a1931ba
-	github.com/df-mc/go-nethernet => github.com/lumineproxy/go-nethernet v0.0.0-20251201013730-45766a8ec674
-	github.com/sandertv/go-raknet => github.com/lumineproxy/go-raknet v0.0.0-20260102015805-b139417c724e
 )
