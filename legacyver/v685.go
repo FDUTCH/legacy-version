@@ -17,7 +17,7 @@ const (
 // New685 uses same data as 686
 func New685(dragonflyMapping bool) *Protocol {
 	itemMapping := mapping.NewItemMapping(requiredItemList686, ItemVersion685)
-	blockTranslator := lookupOrCreateBlockTranslator(685, BlockVersion685, blockStateData686)
+	blockTranslator := lookupOrCreateBlockTranslator(685, blockStateData686)
 	return &Protocol{
 		ver:             "1.21.0",
 		id:              proto.ID685,

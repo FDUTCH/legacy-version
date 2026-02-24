@@ -1,13 +1,10 @@
 package legacyver
 
 import (
-	"fmt"
 	"sync"
 
-	"github.com/akmalfairuz/legacy-version/internal/chunk"
 	"github.com/akmalfairuz/legacy-version/mapping"
 	"github.com/sandertv/gophertunnel/minecraft"
-	"github.com/sandertv/gophertunnel/minecraft/protocol/packet"
 )
 
 var (
@@ -44,7 +41,7 @@ func All(dragonflyMapping bool) []minecraft.Protocol {
 }
 
 // lookupOrCreateBlockTranslator looks up a block translator for the given protocol version.
-func lookupOrCreateBlockTranslator(protocolVersion, blockVersion int32, blockStateData []byte) BlockTranslator {
+func lookupOrCreateBlockTranslator(protocolVersion int32, blockStateData []byte) BlockTranslator {
 	blockTranslatorsMu.RLock()
 	if translator, ok := blockTranslators[protocolVersion]; ok {
 		blockTranslatorsMu.RUnlock()
@@ -60,19 +57,7 @@ func lookupOrCreateBlockTranslator(protocolVersion, blockVersion int32, blockSta
 	}
 
 	blockMapping := mapping.NewBlockMapping(blockStateData)
-	ret := NewBlockTranslator(blockMapping, blockMappingLatest, chunk.NewNetworkPersistentEncoding(blockMapping, blockVersion), chunk.NewBlockPaletteEncoding(blockMapping, blockVersion), false)
+	ret := NewBlockTranslator(blockMapping, blockMappingLatest)
 	blockTranslators[protocolVersion] = ret
 	return ret
-}
-
-// DowngradeLevelChunkPacket downgrades the given level chunk packet to the specified protocol version.
-func DowngradeLevelChunkPacket(protocolVersion int32, pk *packet.LevelChunk) error {
-	blockTranslatorsMu.RLock()
-	translator, ok := blockTranslators[protocolVersion]
-	blockTranslatorsMu.RUnlock()
-	if !ok {
-		return fmt.Errorf("no block translator found for protocol version %d", protocolVersion)
-	}
-
-	return translator.DowngradeLevelChunk(pk)
 }

@@ -8,18 +8,18 @@ require (
 	github.com/df-mc/worldupgrader v1.0.20
 	github.com/go-gl/mathgl v1.2.0
 	github.com/google/uuid v1.6.0
-	github.com/hashicorp/go-version v1.8.0
 	github.com/pelletier/go-toml v1.9.5
 	github.com/rogpeppe/go-internal v1.14.1
-	github.com/samber/lo v1.49.1
+	github.com/samber/lo v1.52.0
 	github.com/sandertv/gophertunnel v1.54.0
 	github.com/segmentio/fasthash v1.0.3
-	golang.org/x/exp v0.0.0-20260211191109-2735e65f0518
-	golang.org/x/image v0.25.0
+	golang.org/x/exp v0.0.0-20260218203240-3dfff04db8fa
+	golang.org/x/image v0.36.0
 	golang.org/x/oauth2 v0.35.0
 )
 
 require (
+	github.com/brentp/intintmap v0.0.0-20251106190759-56907b1f8479 // indirect
 	github.com/coreos/go-oidc/v3 v3.17.0 // indirect
 	github.com/df-mc/go-playfab v1.0.0 // indirect
 	github.com/df-mc/go-xsapi v1.0.1 // indirect
@@ -31,8 +31,6 @@ require (
 	github.com/onsi/ginkgo v1.16.5 // indirect
 	github.com/onsi/gomega v1.17.0 // indirect
 	github.com/sandertv/go-raknet v1.15.1-0.20260112202637-beca0b10c217 // indirect
-	github.com/stretchr/testify v1.11.1 // indirect
-	github.com/zaataylor/cartesian v0.0.0-20221028053253-3b3244d82727 // indirect
 	golang.org/x/mod v0.33.0 // indirect
 	golang.org/x/net v0.50.0 // indirect
 	golang.org/x/text v0.34.0 // indirect

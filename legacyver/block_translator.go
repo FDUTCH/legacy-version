@@ -2,30 +2,16 @@ package legacyver
 
 import (
 	"bytes"
-	_ "embed"
+	_ "unsafe"
 
-	"github.com/akmalfairuz/legacy-version/internal/chunk"
 	"github.com/akmalfairuz/legacy-version/mapping"
 	"github.com/cespare/xxhash/v2"
 	"github.com/df-mc/dragonfly/server/block/cube"
 	"github.com/df-mc/dragonfly/server/world"
-	"github.com/hashicorp/go-version"
+	"github.com/df-mc/dragonfly/server/world/chunk"
 	"github.com/sandertv/gophertunnel/minecraft"
-	"github.com/sandertv/gophertunnel/minecraft/nbt"
 	"github.com/sandertv/gophertunnel/minecraft/protocol"
 	"github.com/sandertv/gophertunnel/minecraft/protocol/packet"
-)
-
-const (
-	BlockVersionLatest int32 = (1 << 24) | (21 << 16) | (50 << 8) | 29
-)
-
-var (
-	// LatestNetworkPersistentEncoding is the Encoding used for sending a Chunk over network. It uses NBT, unlike NetworkEncoding.
-	LatestNetworkPersistentEncoding = chunk.NewNetworkPersistentEncoding(blockMappingLatest, BlockVersionLatest)
-	// LatestBlockPaletteEncoding is the paletteEncoding used for encoding a palette of block states encoded as NBT.
-	LatestBlockPaletteEncoding = chunk.NewBlockPaletteEncoding(blockMappingLatest, BlockVersionLatest)
-	cavesAndCliffsVersion, _   = version.NewVersion("1.18.0")
 )
 
 type BlockTranslator interface {
@@ -39,77 +25,17 @@ type BlockTranslator interface {
 	BlockMapping() mapping.Block
 }
 type DefaultBlockTranslator struct {
-	mapping                 mapping.Block
-	latest                  mapping.Block
-	pse                     chunk.Encoding
-	pe                      chunk.PaletteEncoding
-	oldFormat               bool
-	dimensionDefinitions    []protocol.DimensionDefinition
-	currentDimension        int32
-	UseBlockNetworkIDHashes bool
-	BaseGameVersion         string
+	mapping              mapping.Block
+	latest               mapping.Block
+	dimensionDefinitions []protocol.DimensionDefinition
 }
 
-func NewBlockTranslator(mapping mapping.Block, latestMapping mapping.Block, pse chunk.Encoding, pe chunk.PaletteEncoding, oldFormat bool) *DefaultBlockTranslator {
-	return &DefaultBlockTranslator{mapping: mapping, latest: latestMapping, pse: pse, pe: pe, oldFormat: oldFormat}
+func NewBlockTranslator(mapping mapping.Block, latestMapping mapping.Block) *DefaultBlockTranslator {
+	return &DefaultBlockTranslator{mapping: mapping, latest: latestMapping}
 }
 
 func (t *DefaultBlockTranslator) BlockMapping() mapping.Block {
 	return t.mapping
-}
-
-func (t *DefaultBlockTranslator) DowngradeLevelChunk(pk *packet.LevelChunk) error {
-	count := int(pk.SubChunkCount)
-	if count == protocol.SubChunkRequestModeLimitless || count == protocol.SubChunkRequestModeLimited {
-		return nil
-	}
-
-	buf := bytes.NewBuffer(pk.RawPayload)
-	writeBuf := bytes.NewBuffer(nil)
-	if !pk.CacheEnabled {
-		c, err := chunk.NetworkDecode(t.latest.Air(), buf, count, false, t.getRange(), LatestNetworkPersistentEncoding, LatestBlockPaletteEncoding, t.latest, t.UseBlockNetworkIDHashes)
-		if err != nil {
-			return err
-		}
-		c = t.DowngradeChunk(c)
-
-		payload, err := chunk.NetworkEncode(t.mapping.Air(), c, t.oldFormat, t.pe, t.mapping, false)
-		if err != nil {
-			return err
-		}
-		writeBuf.Write(payload)
-		pk.SubChunkCount = uint32(len(c.Sub()))
-	}
-	safeBytes := buf.Bytes()
-
-	countBorder, err := buf.ReadByte()
-	if err != nil {
-		pk.RawPayload = append(writeBuf.Bytes(), safeBytes...)
-		return err
-	}
-	borderBytes := make([]byte, countBorder)
-	if _, err = buf.Read(borderBytes); err != nil {
-		pk.RawPayload = append(writeBuf.Bytes(), safeBytes...)
-		return err
-	}
-	writeBuf.WriteByte(countBorder)
-	writeBuf.Write(borderBytes)
-
-	enc := nbt.NewEncoderWithEncoding(writeBuf, nbt.NetworkLittleEndian)
-	dec := nbt.NewDecoderWithEncoding(buf, nbt.NetworkLittleEndian)
-	for {
-		var decNbt map[string]any
-		if err = dec.Decode(&decNbt); err != nil {
-			break
-		}
-		t.mapping.DowngradeBlockActorData(decNbt)
-
-		if err = enc.Encode(decNbt); err != nil {
-			break
-		}
-	}
-	pk.RawPayload = append(writeBuf.Bytes(), buf.Bytes()...)
-	return nil
 }
 
 func (t *DefaultBlockTranslator) DowngradeBlockPackets(pks []packet.Packet, conn *minecraft.Conn) (result []packet.Packet) {
@@ -127,61 +53,30 @@ func (t *DefaultBlockTranslator) DowngradeBlockPackets(pks []packet.Packet, conn
 			if !EnableChunkTranslation {
 				break
 			}
-			r := t.getRange()
-			if t.oldFormat {
-				r = cube.Range{0, 255}
-			}
+			var (
+				r   = dimensionRange(pk)
+				c   *chunk.Chunk
+				err error
+			)
 
-			for i, entry := range pk.SubChunkEntries {
-				if entry.Result == protocol.SubChunkResultSuccess {
-					buf := bytes.NewBuffer(entry.RawPayload)
-					writeBuf := bytes.NewBuffer(nil)
-					if !pk.CacheEnabled && !conn.ClientCacheEnabled() {
-						ind := byte(i)
-						subChunk, err := chunk.DecodeSubChunk(t.latest.Air(), r, buf, &ind, chunk.NetworkEncoding, LatestNetworkPersistentEncoding, LatestBlockPaletteEncoding, t.latest, t.UseBlockNetworkIDHashes)
-						if err != nil {
-							//fmt.Println(err)
-							continue
-						}
-						t.DowngradeSubChunk(subChunk)
-						writeBuf.Write(chunk.EncodeSubChunk(subChunk, chunk.NetworkEncoding, t.pe, chunk.SubChunkVersion9, r, int(ind), t.mapping, false))
-					}
-
-					enc := nbt.NewEncoderWithEncoding(writeBuf, nbt.NetworkLittleEndian)
-					dec := nbt.NewDecoderWithEncoding(buf, nbt.NetworkLittleEndian)
-					for {
-						var decNbt map[string]any
-						if err := dec.Decode(&decNbt); err != nil {
-							break
-						}
-						t.mapping.DowngradeBlockActorData(decNbt)
-
-						if err := enc.Encode(decNbt); err != nil {
-							break
-						}
-					}
-
-					entry.RawPayload = append(writeBuf.Bytes(), buf.Bytes()...)
-					entry.BlobHash = xxhash.Sum64(entry.RawPayload)
-					pk.SubChunkEntries[i] = entry
+			for i := range len(pk.SubChunkEntries) {
+				c, err = t.DowngradeSubChunkEntry(&pk.SubChunkEntries[i], c, r)
+				if err != nil {
+					panic(err)
 				}
 			}
 		case *packet.ClientCacheMissResponse:
-			r := t.getRange()
-			if t.oldFormat {
-				r = cube.Range{0, 255}
-			}
-
+			c := chunk.New(t.latest.Air(), cube.Range{-64, 319})
 			for i, blob := range pk.Blobs {
 				buf := bytes.NewBuffer(blob.Payload)
 				ind := byte(0)
-				subChunk, err := chunk.DecodeSubChunk(t.latest.Air(), r, buf, &ind, chunk.NetworkEncoding, LatestNetworkPersistentEncoding, LatestBlockPaletteEncoding, t.latest, t.UseBlockNetworkIDHashes)
+				subChunk, err := decodeSubChunk(buf, c, &ind, chunk.NetworkEncoding)
 				if err != nil {
 					// Has a possibility to be a biome, ignore then
 					continue
 				}
 				t.DowngradeSubChunk(subChunk)
-				blob.Payload = append(chunk.EncodeSubChunk(subChunk, chunk.NetworkEncoding, t.pe, chunk.SubChunkVersion9, r, int(ind), t.mapping, false), buf.Bytes()...)
+				blob.Payload = append(chunk.EncodeSubChunk(c, chunk.NetworkEncoding, int(ind)), buf.Bytes()...)
 				blob.Hash = xxhash.Sum64(blob.Payload)
 				pk.Blobs[i] = blob
 			}
@@ -236,8 +131,6 @@ func (t *DefaultBlockTranslator) DowngradeBlockPackets(pks []packet.Packet, conn
 		case *packet.SetActorData:
 			//pk.EntityMetadata = t.downgradeEntityMetadata(pk.EntityMetadata)
 		case *packet.StartGame:
-			t.UseBlockNetworkIDHashes = pk.UseBlockNetworkIDHashes
-			t.BaseGameVersion = pk.BaseGameVersion
 			t.latest.Adjust(pk.Blocks)
 			t.mapping.Adjust(pk.Blocks)
 		case *packet.ResourcePackStack:
@@ -253,6 +146,61 @@ func (t *DefaultBlockTranslator) DowngradeBlockPackets(pks []packet.Packet, conn
 		result = append(result, pk)
 	}
 	return result
+}
+
+func (t *DefaultBlockTranslator) DowngradeLevelChunk(pk *packet.LevelChunk) error {
+	count := int(pk.SubChunkCount)
+	if count == protocol.SubChunkRequestModeLimitless || count == protocol.SubChunkRequestModeLimited {
+		return nil
+	}
+	buf := bytes.NewBuffer(pk.RawPayload)
+	c, err := chunk.NetworkDecodeBuffer(t.latest.Air(), buf, count, dimensionRange(pk))
+	if err != nil {
+		return err
+	}
+
+	panic("not supported yet")
+	sub := c.Sub()
+	for i := range sub {
+		t.DowngradeSubChunk(sub[i])
+	}
+	var (
+		data   = chunk.Encode(c, chunk.NetworkEncoding)
+		blobs  = append(data.SubChunks, data.Biomes)
+		hashes = make([]uint64, len(blobs))
+		m      = make(map[uint64]struct{}, len(blobs))
+	)
+	for i, blob := range blobs {
+		h := xxhash.Sum64(blob)
+		hashes[i], m[h] = h, struct{}{}
+	}
+	return nil
+}
+
+func (t *DefaultBlockTranslator) DowngradeSubChunkEntry(entry *protocol.SubChunkEntry, c *chunk.Chunk, r cube.Range) (*chunk.Chunk, error) {
+	if entry.Result != protocol.SubChunkResultSuccess || len(entry.RawPayload) == 0 {
+		return c, nil
+	}
+
+	if entry.RawPayload[0] == 10 {
+		entry.RawPayload[0] = 9
+	}
+
+	if c == nil {
+		c = chunk.New(t.latest.Air(), r)
+	}
+
+	buf := bytes.NewBuffer(entry.RawPayload)
+	var index byte
+	sub, err := decodeSubChunk(buf, c, &index, chunk.NetworkEncoding)
+	if err != nil {
+		return c, err
+	}
+	t.DowngradeSubChunk(sub)
+	serializedSubChunk := chunk.EncodeSubChunk(c, chunk.NetworkEncoding, int(index))
+	entry.BlobHash = xxhash.Sum64(serializedSubChunk)
+	entry.RawPayload = append(serializedSubChunk, buf.Bytes()...)
+	return c, err
 }
 
 func (t *DefaultBlockTranslator) UpgradeBlockPackets(pks []packet.Packet, conn *minecraft.Conn) (result []packet.Packet) {
@@ -275,13 +223,6 @@ func (t *DefaultBlockTranslator) DowngradeBlockRuntimeID(input uint32) uint32 {
 	if t.latest == t.mapping {
 		return input
 	}
-	if t.UseBlockNetworkIDHashes {
-		var ok bool
-		input, ok = t.latest.HashToRuntimeID(input)
-		if !ok {
-			return t.mapping.InfoUpdate()
-		}
-	}
 	state, ok := t.latest.RuntimeIDToState(input)
 	if !ok {
 		return t.mapping.InfoUpdate()
@@ -290,55 +231,7 @@ func (t *DefaultBlockTranslator) DowngradeBlockRuntimeID(input uint32) uint32 {
 	if !ok {
 		return t.mapping.InfoUpdate()
 	}
-	if t.UseBlockNetworkIDHashes {
-		runtimeID, ok = t.mapping.RuntimeIDToHash(runtimeID)
-		if !ok {
-			return t.mapping.InfoUpdate()
-		}
-	}
 	return runtimeID
-}
-
-func (t *DefaultBlockTranslator) DowngradeChunk(input *chunk.Chunk) *chunk.Chunk {
-	if t.latest == t.mapping {
-		return input
-	}
-
-	start := 0
-	r := t.getRange()
-	if t.oldFormat {
-		start = 4
-		r = cube.Range{0, 255}
-	}
-	downgraded := chunk.New(t.mapping.Air(), r)
-
-	i := 0
-	// First downgrade the blocks.
-	for _, sub := range input.Sub()[start : len(input.Sub())-start] {
-		t.DowngradeSubChunk(sub)
-		downgraded.Sub()[i] = sub
-		i += 1
-
-		if i == len(downgraded.Sub()) {
-			break
-		}
-	}
-	i = 0
-	// Then downgrade the biome ids.
-	for _, sub := range input.BiomeSub()[start : len(input.BiomeSub())-start] {
-		// todo
-		sub.Palette().Replace(func(v uint32) uint32 {
-			return 0 // at least the client doesn't crash now
-		})
-		downgraded.BiomeSub()[i] = sub
-		i += 1
-
-		if i == len(downgraded.BiomeSub()) {
-			break
-		}
-	}
-
-	return downgraded
 }
 
 func (t *DefaultBlockTranslator) DowngradeSubChunk(input *chunk.SubChunk) {
@@ -364,13 +257,6 @@ func (t *DefaultBlockTranslator) UpgradeBlockRuntimeID(input uint32) uint32 {
 	if t.latest == t.mapping {
 		return input
 	}
-	if t.UseBlockNetworkIDHashes {
-		var ok bool
-		input, ok = t.mapping.HashToRuntimeID(input)
-		if !ok {
-			return t.latest.InfoUpdate()
-		}
-	}
 	state, ok := t.mapping.RuntimeIDToState(input)
 	if !ok {
 		return t.latest.InfoUpdate()
@@ -378,12 +264,6 @@ func (t *DefaultBlockTranslator) UpgradeBlockRuntimeID(input uint32) uint32 {
 	runtimeID, ok := t.latest.StateToRuntimeID(state)
 	if !ok {
 		return t.latest.InfoUpdate()
-	}
-	if t.UseBlockNetworkIDHashes {
-		runtimeID, ok = t.latest.RuntimeIDToHash(runtimeID)
-		if !ok {
-			return t.latest.InfoUpdate()
-		}
 	}
 	return runtimeID
 }
@@ -398,28 +278,17 @@ func (t *DefaultBlockTranslator) upgradeEntityMetadata(metadata map[uint32]any) 
 	return metadata
 }
 
-func (t *DefaultBlockTranslator) getRange() (r cube.Range) {
-	var dimName string
-	switch t.currentDimension {
-	case 0:
-		dimName = "minecraft:overworld"
-		r = world.Overworld.Range()
-		v, err := version.NewVersion(t.BaseGameVersion)
-		if err == nil && v.LessThan(cavesAndCliffsVersion) {
-			r = cube.Range{0, 255}
-		}
-	case 1:
-		dimName = "minecraft:nether"
-		r = world.Nether.Range()
-	case 2:
-		dimName = "minecraft:the_end"
-		r = world.End.Range()
+func dimensionRange(p packet.Packet) cube.Range {
+	var id int
+	switch pk := p.(type) {
+	case *packet.LevelChunk:
+		id = int(pk.Dimension)
+	case *packet.SubChunk:
+		id = int(pk.Dimension)
 	}
-	for _, def := range t.dimensionDefinitions {
-		if def.Name == dimName {
-			r = cube.Range{int(def.Range[0]), int(def.Range[1])}
-			break
-		}
-	}
-	return
+	dim, _ := world.DimensionByID(id)
+	return dim.Range()
 }
+
+//go:linkname decodeSubChunk github.com/df-mc/dragonfly/server/world/chunk.decodeSubChunk
+func decodeSubChunk(buf *bytes.Buffer, c *chunk.Chunk, index *byte, e chunk.Encoding) (*chunk.SubChunk, error)

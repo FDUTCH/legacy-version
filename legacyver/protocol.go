@@ -429,7 +429,6 @@ func (p *Protocol) downgradePackets(pks []packet.Packet, conn *minecraft.Conn) [
 				DetachFromEntity: pk.DetachFromEntity,
 			}
 		case *packet.ChangeDimension:
-			translator.currentDimension = pk.Dimension
 			pks[pkIndex] = &legacypacket.ChangeDimension{
 				Dimension:       pk.Dimension,
 				Position:        pk.Position,
@@ -547,7 +546,6 @@ func (p *Protocol) downgradePackets(pks []packet.Packet, conn *minecraft.Conn) [
 				ClearRecipes:                 pk.ClearRecipes,
 			}
 		case *packet.StartGame:
-			translator.currentDimension = pk.Dimension
 			// Adjust game version
 			pk.GameVersion = p.ver
 			pk.BaseGameVersion = p.ver
