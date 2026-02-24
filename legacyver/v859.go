@@ -23,7 +23,7 @@ var (
 
 func New859(dragonflyMapping bool) *Protocol {
 	itemMapping := mapping.NewItemMapping(requiredItemList859, ItemVersion859)
-	blockTranslator := lookupOrCreateBlockTranslator(859, blockStateData859)
+	blockTranslator := lookupOrCreateBlockTranslator(898, blockStateData859)
 	return &Protocol{
 		ver:             "1.21.120",
 		id:              proto.ID859,
