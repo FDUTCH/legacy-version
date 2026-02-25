@@ -193,6 +193,18 @@ func (p *Protocol) ConvertFromLatest(pk packet.Packet, conn *minecraft.Conn) []p
 }
 
 func (p *Protocol) downgradePackets(pks []packet.Packet, conn *minecraft.Conn) []packet.Packet {
+	if it, ok := p.itemTranslator.(*DefaultItemTranslator); ok {
+		if len(p.Items) > 0 {
+			it.SyncLatestEntries(p.Items)
+		}
+		if conn != nil {
+			gameItems := conn.GameData().Items
+			if len(gameItems) > 0 {
+				it.SyncLatestEntries(gameItems)
+			}
+		}
+	}
+
 	translator, ok := p.blockTranslator.(*DefaultBlockTranslator)
 	if !ok {
 		return pks
@@ -202,7 +214,7 @@ func (p *Protocol) downgradePackets(pks []packet.Packet, conn *minecraft.Conn) [
 		case *packet.DimensionData:
 			translator.dimensionDefinitions = pk.Definitions
 		case *packet.ClientCacheStatus:
-			// pk.Enabled = false // TODO: enable when chunk translation is not broken
+			//pk.Enabled = false // TODO: enable when chunk translation is not broken
 		case *packet.SetActorMotion:
 			pks[pkIndex] = &legacypacket.SetActorMotion{
 				EntityRuntimeID: pk.EntityRuntimeID,
@@ -534,8 +546,12 @@ func (p *Protocol) downgradePackets(pks []packet.Packet, conn *minecraft.Conn) [
 			pk.GameVersion = p.ver
 			pk.BaseGameVersion = p.ver
 
-			items := make([]proto.LegacyItemRegistryEntry, len(p.Items))
-			for i, it := range p.Items {
+			sourceItems := p.Items
+			if len(sourceItems) == 0 && conn != nil {
+				sourceItems = conn.GameData().Items
+			}
+			items := make([]proto.LegacyItemRegistryEntry, len(sourceItems))
+			for i, it := range sourceItems {
 				items[i] = (&proto.LegacyItemRegistryEntry{}).FromLatest(it)
 			}
 
@@ -844,7 +860,7 @@ func (p *Protocol) upgradePackets(pks []packet.Packet, conn *minecraft.Conn) []p
 	for pkIndex, pk := range pks {
 		switch pk := pk.(type) {
 		case *packet.ClientCacheStatus:
-			// pk.Enabled = false // TODO: enable when chunk translation is not broken
+			pk.Enabled = false
 		case *legacypacket.SetActorMotion:
 			pks[pkIndex] = &packet.SetActorMotion{
 				EntityRuntimeID: pk.EntityRuntimeID,
