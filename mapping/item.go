@@ -19,6 +19,7 @@ type Item interface {
 	ItemRuntimeIDToData(int32) (map[string]any, bool)
 	RegisterEntry(string) int32
 	RegisterEntryRID(string, int32, uint8, map[string]any)
+	UpsertEntryRID(string, int32, uint8, map[string]any)
 	Air() int32
 	ItemVersion() uint16
 	ItemEntries() []ItemEntry
@@ -156,6 +157,29 @@ func (m *DefaultItemMapping) RegisterEntryRID(name string, rid int32, version ui
 		if data != nil {
 			m.itemRuntimeIDToData[rid] = data
 		}
+	}
+}
+
+func (m *DefaultItemMapping) UpsertEntryRID(name string, rid int32, version uint8, data map[string]any) {
+	defer m.mu.Unlock()
+	m.mu.Lock()
+
+	if oldRID, ok := m.itemNamesToRuntimeIDs[name]; ok && oldRID != rid {
+		delete(m.itemRuntimeIDsToNames, oldRID)
+		delete(m.itemRuntimeIDToVersion, oldRID)
+		delete(m.itemRuntimeIDToData, oldRID)
+	}
+	if oldName, ok := m.itemRuntimeIDsToNames[rid]; ok && oldName != name {
+		delete(m.itemNamesToRuntimeIDs, oldName)
+	}
+
+	m.itemNamesToRuntimeIDs[name] = rid
+	m.itemRuntimeIDsToNames[rid] = name
+	m.itemRuntimeIDToVersion[rid] = version
+	if data != nil {
+		m.itemRuntimeIDToData[rid] = data
+	} else {
+		delete(m.itemRuntimeIDToData, rid)
 	}
 }
 

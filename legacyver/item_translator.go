@@ -63,6 +63,16 @@ type DefaultItemTranslator struct {
 	infoUpdateRID int32
 }
 
+func (t *DefaultItemTranslator) SyncLatestEntries(entries []protocol.ItemEntry) {
+	for _, entry := range entries {
+		version := uint8(protocol.ItemEntryVersionDataDriven)
+		if entry.Version >= 0 && entry.Version <= 255 {
+			version = uint8(entry.Version)
+		}
+		t.latest.UpsertEntryRID(entry.Name, int32(entry.RuntimeID), version, entry.Data)
+	}
+}
+
 func NewItemTranslator(mapping mapping.Item, latestMapping mapping.Item, blockMapping mapping.Block, blockMappingLatest mapping.Block) *DefaultItemTranslator {
 	infoUpdateRID, _ := mapping.ItemNameToRuntimeID("minecraft:info_update")
 	return &DefaultItemTranslator{mapping: mapping, latest: latestMapping, blockMapping: blockMapping, blockMappingLatest: blockMappingLatest,
